@@ -47,7 +47,7 @@ namespace RestartIt
         {
             Title = _isNewProgram ? "Add Program" : "Edit Program";
             Width = 500;
-            Height = 450;
+            Height = 500;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
             ResizeMode = ResizeMode.NoResize;
 
