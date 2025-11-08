@@ -238,4 +238,4 @@ If you encounter issues or have questions:
 
 ---
 
-**RestartIt** - Keep your critical applications running, automatically.
+**RestartIt** - Keep your critical applications running.
