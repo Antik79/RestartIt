@@ -1,6 +1,6 @@
 # RestartIt
 
-**Version 1.1.0** | [Download Latest Release](https://github.com/Antik79/RestartIt/releases/latest)
+**Version 1.2.1** | [Download Latest Release](https://github.com/Antik79/RestartIt/releases/latest)
 
 **RestartIt** is a Windows desktop application that monitors specified programs and automatically restarts them if they stop running. Perfect for maintaining critical applications, services, or any software that needs to stay running 24/7.
 
@@ -25,7 +25,8 @@
 
 ### User Interface
 - **Clean Modern UI** - Built with WPF for a professional appearance
-- **Multi-Language Support** - Available in English, Dutch, French, and German
+- **Multi-Language Support** - Available in 16 languages with real-time switching
+- **Modular Language System** - Add new languages by simply dropping JSON files
 - **System Tray Integration** - Runs quietly in the background
 - **Easy Configuration** - Simple dialogs for adding and editing monitored programs
 - **Per-Program Settings** - Individual check intervals and restart delays
@@ -131,24 +132,61 @@ The compiled application will be in `bin/Release/net8.0-windows/`
    - **Start with Windows** - Launch at Windows startup
    - **Minimize to Tray** - Hide to system tray when minimized
    - **Start Minimized** - Launch minimized to tray
-   - **Language** - Select your preferred language (English, Nederlands, Français, Deutsch)
+   - **Language** - Select from 16 available languages
 
 ## Language Support
 
-RestartIt is available in multiple languages:
-- **English** (Default)
-- **Nederlands** (Dutch)
-- **Français** (French)
-- **Deutsch** (German)
+RestartIt supports **16 languages** with complete UI localization:
+
+| Language | Native Name | Flag |
+|----------|-------------|------|
+| English | English | 🇬🇧 |
+| Dutch | Nederlands | 🇳🇱 |
+| French | Français | 🇫🇷 |
+| German | Deutsch | 🇩🇪 |
+| Spanish | Español | 🇪🇸 |
+| Italian | Italiano | 🇮🇹 |
+| Japanese | 日本語 | 🇯🇵 |
+| Korean | 한국어 | 🇰🇷 |
+| Chinese | 中文 | 🇨🇳 |
+| Turkish | Türkçe | 🇹🇷 |
+| Greek | Ελληνικά | 🇬🇷 |
+| Swedish | Svenska | 🇸🇪 |
+| Norwegian | Norsk | 🇳🇴 |
+| Danish | Dansk | 🇩🇰 |
+| Finnish | Suomi | 🇫🇮 |
+| Swahili | Swahili | - |
 
 ### Changing Language
 
 1. Open **Settings** → **Application** tab
 2. Select your preferred language from the dropdown
 3. Click **OK** to apply
-4. Messages, dialogs, and notifications will display in the selected language
+4. The entire UI updates immediately - no restart required!
 
-**Note:** The main UI labels and buttons are currently in English. Full UI localization will be available in a future release.
+All UI elements, dialogs, buttons, and log messages are fully localized.
+
+### Adding a New Language
+
+RestartIt uses a modular language system - you can add new languages without modifying code:
+
+1. Create a JSON file in the `Localization` folder (e.g., `pt.json` for Portuguese)
+2. Add the metadata and translations:
+```json
+{
+  "_metadata": {
+    "code": "pt",
+    "name": "Portuguese",
+    "nativeName": "Português",
+    "icon": "🇵🇹"
+  },
+  "App.Title": "RestartIt - Monitor de Aplicações",
+  ...
+}
+```
+3. The language will automatically appear in the Settings dropdown!
+
+See existing language files in the `Localization` folder for the complete list of translation keys.
 
 ## Configuration
 
@@ -229,12 +267,34 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Icons and UI design inspired by modern Windows applications
 - Thanks to all contributors and users!
 
+## Changelog
+
+For a detailed list of changes in each version, see [CHANGELOG.md](CHANGELOG.md).
+
+### Recent Updates
+
+**v1.2.1** (2025-11-09)
+- Fixed critical bug: Enable/disable monitor toggle not working for programs disabled at launch
+- Fixed incomplete localization: All log messages now properly translate to selected language
+- Added missing localization keys to all 16 language files
+
+**v1.2.0** (2025-11-08)
+- Added 12 new languages (total: 16 languages)
+- Implemented modular language discovery system
+- Added language metadata support with flag emojis
+
+**v1.1.0** (2025-11-08)
+- Initial multi-language support (4 languages)
+- Real-time language switching
+- Fully localized UI
+
 ## Support
 
 If you encounter issues or have questions:
 - Open an [Issue](https://github.com/Antik79/RestartIt/issues) on GitHub
 - Check existing issues for solutions
 - Review the troubleshooting section above
+- Check the [CHANGELOG](CHANGELOG.md) for recent fixes
 
 ---
 
