@@ -126,6 +126,11 @@
   "Log.RestartFailed": "Programma herstarten mislukt: {0}",
   "Log.ProcessNotFound": "Proces niet gevonden: {0}",
   "Log.ProcessRunning": "Proces actief: {0}",
+  "Log.ProgramNotRunning": "{0} is niet actief. Herstarten over {1} seconden...",
+  "Log.ErrorMonitoring": "Fout bij monitoren van {0}: {1}",
+  "Log.ErrorCheckingProcess": "Fout bij controleren of {0} actief is: {1}",
+  "Log.SuccessfullyRestarted": "{0} succesvol herstart",
+  "Log.FailedToRestart": "Herstarten van {0} mislukt: {1}",
 
   "Email.Subject.Restart": "RestartIt: Programma Herstart - {0}",
   "Email.Subject.Failed": "RestartIt: Herstart Mislukt - {0}",

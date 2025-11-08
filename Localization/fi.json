@@ -128,6 +128,11 @@
   "Log.RestartFailed": "Ohjelman uudelleenkäynnistys epäonnistui: {0}",
   "Log.ProcessNotFound": "Prosessia ei löydy: {0}",
   "Log.ProcessRunning": "Prosessi käynnissä: {0}",
+  "Log.ProgramNotRunning": "{0} ei ole käynnissä. Uudelleenkäynnistys {1} sekunnin kuluttua...",
+  "Log.ErrorMonitoring": "Virhe valvottaessa {0}: {1}",
+  "Log.ErrorCheckingProcess": "Virhe tarkistettaessa onko {0} käynnissä: {1}",
+  "Log.SuccessfullyRestarted": "{0} käynnistettiin onnistuneesti uudelleen",
+  "Log.FailedToRestart": "{0} uudelleenkäynnistys epäonnistui: {1}",
 
   "Email.Subject.Restart": "RestartIt: Ohjelma käynnistetty uudelleen - {0}",
   "Email.Subject.Failed": "RestartIt: Uudelleenkäynnistys epäonnistui - {0}",

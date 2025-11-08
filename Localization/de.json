@@ -126,6 +126,11 @@
   "Log.RestartFailed": "Programm konnte nicht neu gestartet werden: {0}",
   "Log.ProcessNotFound": "Prozess nicht gefunden: {0}",
   "Log.ProcessRunning": "Prozess läuft: {0}",
+  "Log.ProgramNotRunning": "{0} läuft nicht. Neustart in {1} Sekunden...",
+  "Log.ErrorMonitoring": "Fehler bei der Überwachung von {0}: {1}",
+  "Log.ErrorCheckingProcess": "Fehler bei der Überprüfung von {0}: {1}",
+  "Log.SuccessfullyRestarted": "{0} erfolgreich neu gestartet",
+  "Log.FailedToRestart": "Neustart von {0} fehlgeschlagen: {1}",
 
   "Email.Subject.Restart": "RestartIt: Programm Neu Gestartet - {0}",
   "Email.Subject.Failed": "RestartIt: Neustart Fehlgeschlagen - {0}",

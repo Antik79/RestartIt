@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2025-11-09
+
+### Fixed
+- **CRITICAL**: Enable/disable monitor toggle not working for programs disabled at launch - PropertyChanged event handlers were not being subscribed for existing programs when monitoring service started
+- Incomplete localization - 5 log messages remained in English regardless of selected language (program not running, error monitoring, error checking process, successfully restarted, failed to restart)
+- Added missing localization keys to all 16 language files
+
 ## [1.2.0] - 2025-11-08
 
 ### Added
@@ -73,7 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add/Edit/Remove monitored programs
 - Configuration persistence in %AppData%\RestartIt\config.json
 
-[Unreleased]: https://github.com/Antik79/RestartIt/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/Antik79/RestartIt/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/Antik79/RestartIt/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/Antik79/RestartIt/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/Antik79/RestartIt/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Antik79/RestartIt/releases/tag/v1.0.0

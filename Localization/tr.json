@@ -128,6 +128,11 @@
   "Log.RestartFailed": "Program yeniden başlatılamadı: {0}",
   "Log.ProcessNotFound": "İşlem bulunamadı: {0}",
   "Log.ProcessRunning": "İşlem çalışıyor: {0}",
+  "Log.ProgramNotRunning": "{0} çalışmıyor. {1} saniye içinde yeniden başlatılıyor...",
+  "Log.ErrorMonitoring": "{0} izlenirken hata: {1}",
+  "Log.ErrorCheckingProcess": "{0} çalışıp çalışmadığı kontrol edilirken hata: {1}",
+  "Log.SuccessfullyRestarted": "{0} başarıyla yeniden başlatıldı",
+  "Log.FailedToRestart": "{0} yeniden başlatılamadı: {1}",
 
   "Email.Subject.Restart": "RestartIt: Program Yeniden Başlatıldı - {0}",
   "Email.Subject.Failed": "RestartIt: Yeniden Başlatma Başarısız - {0}",

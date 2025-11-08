@@ -126,6 +126,11 @@
   "Log.RestartFailed": "Échec du redémarrage du programme: {0}",
   "Log.ProcessNotFound": "Processus introuvable: {0}",
   "Log.ProcessRunning": "Processus en cours: {0}",
+  "Log.ProgramNotRunning": "{0} n'est pas en cours d'exécution. Redémarrage dans {1} secondes...",
+  "Log.ErrorMonitoring": "Erreur lors de la surveillance de {0}: {1}",
+  "Log.ErrorCheckingProcess": "Erreur lors de la vérification de {0}: {1}",
+  "Log.SuccessfullyRestarted": "{0} redémarré avec succès",
+  "Log.FailedToRestart": "Échec du redémarrage de {0}: {1}",
 
   "Email.Subject.Restart": "RestartIt: Programme Redémarré - {0}",
   "Email.Subject.Failed": "RestartIt: Échec du Redémarrage - {0}",

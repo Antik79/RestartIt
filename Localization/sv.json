@@ -128,6 +128,11 @@
   "Log.RestartFailed": "Kunde inte starta om program: {0}",
   "Log.ProcessNotFound": "Process ej hittad: {0}",
   "Log.ProcessRunning": "Proces körs: {0}",
+  "Log.ProgramNotRunning": "{0} körs inte. Startar om om {1} sekunder...",
+  "Log.ErrorMonitoring": "Fel vid övervakning av {0}: {1}",
+  "Log.ErrorCheckingProcess": "Fel vid kontroll om {0} körs: {1}",
+  "Log.SuccessfullyRestarted": "Startade om {0} framgångsrikt",
+  "Log.FailedToRestart": "Kunde inte starta om {0}: {1}",
 
   "Email.Subject.Restart": "RestartIt: Program omstartat - {0}",
   "Email.Subject.Failed": "RestartIt: Omstart misslyckades - {0}",

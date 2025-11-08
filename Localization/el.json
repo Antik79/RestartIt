@@ -128,6 +128,11 @@
   "Log.RestartFailed": "Αποτυχία επανεκκίνησης προγράμματος: {0}",
   "Log.ProcessNotFound": "Δε βρέθηκε διαδικασία: {0}",
   "Log.ProcessRunning": "Διεργασία σε εκτέλεση: {0}",
+  "Log.ProgramNotRunning": "Το {0} δεν εκτελείται. Επανεκκίνηση σε {1} δευτερόλεπτα...",
+  "Log.ErrorMonitoring": "Σφάλμα παρακολούθησης {0}: {1}",
+  "Log.ErrorCheckingProcess": "Σφάλμα κατά τον έλεγχο εάν εκτελείται το {0}: {1}",
+  "Log.SuccessfullyRestarted": "Επιτυχής επανεκκίνηση του {0}",
+  "Log.FailedToRestart": "Αποτυχία επανεκκίνησης του {0}: {1}",
 
   "Email.Subject.Restart": "RestartIt: Πρόγραμμα Επανεκκινήθηκε - {0}",
   "Email.Subject.Failed": "RestartIt: Αποτυχία Επανεκκίνησης - {0}",

@@ -128,6 +128,11 @@
   "Log.RestartFailed": "Fallo al reiniciar programa: {0}",
   "Log.ProcessNotFound": "Proceso no encontrado: {0}",
   "Log.ProcessRunning": "Proceso en ejecución: {0}",
+  "Log.ProgramNotRunning": "{0} no está en ejecución. Reiniciando en {1} segundos...",
+  "Log.ErrorMonitoring": "Error al monitorear {0}: {1}",
+  "Log.ErrorCheckingProcess": "Error al verificar si {0} está en ejecución: {1}",
+  "Log.SuccessfullyRestarted": "{0} reiniciado exitosamente",
+  "Log.FailedToRestart": "Fallo al reiniciar {0}: {1}",
 
   "Email.Subject.Restart": "RestartIt: Programa Reiniciado - {0}",
   "Email.Subject.Failed": "RestartIt: Reinicio Fallido - {0}",

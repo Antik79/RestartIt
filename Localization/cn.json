@@ -128,6 +128,11 @@
   "Log.RestartFailed": "程序重新启动失败：{0}",
   "Log.ProcessNotFound": "未找到进程：{0}",
   "Log.ProcessRunning": "进程正在运行：{0}",
+  "Log.ProgramNotRunning": "{0} 未运行。将在 {1} 秒后重启...",
+  "Log.ErrorMonitoring": "监控 {0} 时出错：{1}",
+  "Log.ErrorCheckingProcess": "检查 {0} 是否正在运行时出错：{1}",
+  "Log.SuccessfullyRestarted": "成功重启了 {0}",
+  "Log.FailedToRestart": "重启 {0} 失败：{1}",
 
   "Email.Subject.Restart": "RestartIt：程序已重新启动 - {0}",
   "Email.Subject.Failed": "RestartIt：重新启动失败 - {0}",

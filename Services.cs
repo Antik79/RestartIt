@@ -283,8 +283,10 @@ namespace RestartIt
             _isRunning = true;
             StatusChanged?.Invoke(this, EventArgs.Empty);
 
+            // Subscribe to PropertyChanged for all existing programs
             foreach (var program in _programs)
             {
+                program.PropertyChanged += Program_PropertyChanged;
                 if (program.Enabled)
                 {
                     StartMonitoring(program);
@@ -301,6 +303,12 @@ namespace RestartIt
 
             _isRunning = false;
             _programs.CollectionChanged -= Programs_CollectionChanged;
+
+            // Unsubscribe from PropertyChanged for all programs
+            foreach (var program in _programs)
+            {
+                program.PropertyChanged -= Program_PropertyChanged;
+            }
 
             foreach (var cts in _monitorTasks.Values)
             {
@@ -387,7 +395,11 @@ namespace RestartIt
                     else
                     {
                         program.Status = "Stopped";
-                        _logger.Log($"{program.ProgramName} is not running. Restarting in {program.RestartDelaySeconds} seconds...", LogLevel.Warning);
+                        string message = string.Format(
+                            LocalizationService.Instance.GetString("Log.ProgramNotRunning", "{0} is not running. Restarting in {1} seconds..."),
+                            program.ProgramName,
+                            program.RestartDelaySeconds);
+                        _logger.Log(message, LogLevel.Warning);
 
                         await Task.Delay(program.RestartDelaySeconds * 1000, cancellationToken);
 
@@ -403,7 +415,11 @@ namespace RestartIt
                 }
                 catch (Exception ex)
                 {
-                    _logger.Log($"Error monitoring {program.ProgramName}: {ex.Message}", LogLevel.Error);
+                    string message = string.Format(
+                        LocalizationService.Instance.GetString("Log.ErrorMonitoring", "Error monitoring {0}: {1}"),
+                        program.ProgramName,
+                        ex.Message);
+                    _logger.Log(message, LogLevel.Error);
                 }
             }
         }
@@ -440,7 +456,11 @@ namespace RestartIt
             }
             catch (Exception ex)
             {
-                _logger.Log($"Error checking if {program.ProgramName} is running: {ex.Message}", LogLevel.Error);
+                string message = string.Format(
+                    LocalizationService.Instance.GetString("Log.ErrorCheckingProcess", "Error checking if {0} is running: {1}"),
+                    program.ProgramName,
+                    ex.Message);
+                _logger.Log(message, LogLevel.Error);
                 return false;
             }
         }
@@ -463,7 +483,10 @@ namespace RestartIt
                 program.LastRestartTime = DateTime.Now;
                 program.Status = "Running";
 
-                _logger.Log($"Successfully restarted {program.ProgramName}", LogLevel.Info);
+                string message = string.Format(
+                    LocalizationService.Instance.GetString("Log.SuccessfullyRestarted", "Successfully restarted {0}"),
+                    program.ProgramName);
+                _logger.Log(message, LogLevel.Info);
 
                 // Send email notification on successful restart
                 if (_notificationSettings.NotifyOnRestart)
@@ -478,7 +501,11 @@ namespace RestartIt
             catch (Exception ex)
             {
                 program.Status = "Failed";
-                _logger.Log($"Failed to restart {program.ProgramName}: {ex.Message}", LogLevel.Error);
+                string message = string.Format(
+                    LocalizationService.Instance.GetString("Log.FailedToRestart", "Failed to restart {0}: {1}"),
+                    program.ProgramName,
+                    ex.Message);
+                _logger.Log(message, LogLevel.Error);
 
                 // Send email notification on failure
                 if (_notificationSettings.NotifyOnFailure)

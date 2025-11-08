@@ -128,6 +128,11 @@
   "Log.RestartFailed": "Impossibile riavviare il programma: {0}",
   "Log.ProcessNotFound": "Processo non trovato: {0}",
   "Log.ProcessRunning": "Processo in esecuzione: {0}",
+  "Log.ProgramNotRunning": "{0} non è in esecuzione. Riavvio tra {1} secondi...",
+  "Log.ErrorMonitoring": "Errore nel monitoraggio di {0}: {1}",
+  "Log.ErrorCheckingProcess": "Errore nel controllo se {0} è in esecuzione: {1}",
+  "Log.SuccessfullyRestarted": "Riavvio di {0} riuscito",
+  "Log.FailedToRestart": "Impossibile riavviare {0}: {1}",
 
   "Email.Subject.Restart": "RestartIt: Programma Riavviato - {0}",
   "Email.Subject.Failed": "RestartIt: Riavvio Fallito - {0}",

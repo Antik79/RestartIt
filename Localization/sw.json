@@ -128,6 +128,11 @@
   "Log.RestartFailed": "Imeshindwa kuanzisha upya programu: {0}",
   "Log.ProcessNotFound": "Mchakato haupatikani: {0}",
   "Log.ProcessRunning": "Mchakato unaendesha: {0}",
+  "Log.ProgramNotRunning": "{0} haiendeleshi. Inaanzisha upya baada ya sekunde {1}...",
+  "Log.ErrorMonitoring": "Hitilafu wakati wa kufuatilia {0}: {1}",
+  "Log.ErrorCheckingProcess": "Hitilafu wakati wa kuangalia ikiwa {0} inaendesha: {1}",
+  "Log.SuccessfullyRestarted": "{0} imeanzishwa upya kwa mafanikio",
+  "Log.FailedToRestart": "Imeshindwa kuanzisha {0} upya: {1}",
 
   "Email.Subject.Restart": "RestartIt: Programu Imeanzishwa Upya - {0}",
   "Email.Subject.Failed": "RestartIt: Uanzishaji Upya Umeshindwa - {0}",

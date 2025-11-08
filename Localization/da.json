@@ -128,6 +128,11 @@
   "Log.RestartFailed": "Kunne ikke genstarte program: {0}",
   "Log.ProcessNotFound": "Proces ikke fundet: {0}",
   "Log.ProcessRunning": "Proces kører: {0}",
+  "Log.ProgramNotRunning": "{0} kører ikke. Genstarter om {1} sekunder...",
+  "Log.ErrorMonitoring": "Fejl ved overvågning af {0}: {1}",
+  "Log.ErrorCheckingProcess": "Fejl ved kontrol af om {0} kører: {1}",
+  "Log.SuccessfullyRestarted": "Genstartet {0} korrekt",
+  "Log.FailedToRestart": "Kunne ikke genstarte {0}: {1}",
 
   "Email.Subject.Restart": "RestartIt: Program genstartet – {0}",
   "Email.Subject.Failed": "RestartIt: Genstart mislykkedes – {0}",

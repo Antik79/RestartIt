@@ -127,6 +127,11 @@
   "Log.RestartFailed": "Failed to restart program: {0}",
   "Log.ProcessNotFound": "Process not found: {0}",
   "Log.ProcessRunning": "Process running: {0}",
+  "Log.ProgramNotRunning": "{0} is not running. Restarting in {1} seconds...",
+  "Log.ErrorMonitoring": "Error monitoring {0}: {1}",
+  "Log.ErrorCheckingProcess": "Error checking if {0} is running: {1}",
+  "Log.SuccessfullyRestarted": "Successfully restarted {0}",
+  "Log.FailedToRestart": "Failed to restart {0}: {1}",
 
   "Email.Subject.Restart": "RestartIt: Program Restarted - {0}",
   "Email.Subject.Failed": "RestartIt: Restart Failed - {0}",
