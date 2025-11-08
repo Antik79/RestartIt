@@ -57,6 +57,21 @@ Minimal footprint - runs in the system tray with quick access to show/hide and e
 2. Extract the ZIP file to your desired location
 3. Run `RestartIt.exe`
 
+### Windows SmartScreen Warning
+
+When running RestartIt for the first time, you may see a **"Windows protected your PC"** message. This is normal for applications without a code signing certificate.
+
+**To run the application:**
+1. Click **"More info"**
+2. Click **"Run anyway"**
+
+**Why does this happen?**
+- RestartIt is not code-signed (certificates cost money for open-source projects)
+- Windows SmartScreen warns about unsigned applications as a security precaution
+- The application is safe - all source code is available on GitHub for review
+
+**Alternative:** Build from source (see below) to avoid this warning entirely.
+
 ### Build from Source
 ```bash
 git clone https://github.com/Antik79/RestartIt.git
@@ -154,6 +169,15 @@ RestartIt is ideal for:
 - Cannot monitor Windows services (use Windows Service Manager for that)
 
 ## Troubleshooting
+
+### "Windows protected your PC" Warning
+**Issue:** Windows SmartScreen blocks the application when first running.
+
+**Solution:**
+1. Click **"More info"** on the warning dialog
+2. Click **"Run anyway"**
+
+This warning appears because RestartIt is not code-signed. The application is safe and open-source. To avoid this warning, you can build from source instead of downloading the pre-built release.
 
 ### Program Won't Restart
 - Verify the executable path is correct
