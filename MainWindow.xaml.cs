@@ -8,7 +8,6 @@ using System.IO;
 using Microsoft.Win32;
 using Forms = System.Windows.Forms;
 using Drawing = System.Drawing;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace RestartIt
@@ -29,14 +28,14 @@ namespace RestartIt
         {
             InitializeComponent();
 
-            // Set window icon
+            // Set window icon from App.ico
             try
             {
-                var appIcon = IconHelper.CreateApplicationIcon();
-                this.Icon = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(
-                    appIcon.Handle,
-                    System.Windows.Int32Rect.Empty,
-                    System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
+                string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App.ico");
+                if (File.Exists(iconPath))
+                {
+                    this.Icon = new System.Windows.Media.Imaging.BitmapImage(new Uri(iconPath, UriKind.Absolute));
+                }
             }
             catch (Exception ex)
             {
@@ -72,8 +71,17 @@ namespace RestartIt
 
         private void InitializeSystemTray()
         {
-            // Create a persistent tray icon using IconHelper
-            _trayIcon = IconHelper.CreateTrayIcon();
+            // Load tray icon from App.ico
+            string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App.ico");
+            if (File.Exists(iconPath))
+            {
+                _trayIcon = new Drawing.Icon(iconPath);
+            }
+            else
+            {
+                // Fallback to generated icon if App.ico not found
+                _trayIcon = IconHelper.CreateTrayIcon();
+            }
 
             _notifyIcon = new Forms.NotifyIcon
             {
@@ -113,58 +121,6 @@ namespace RestartIt
 
             _notifyIcon.ContextMenuStrip = contextMenu;
         }
-
-        private Drawing.Icon CreateTrayIcon()
-        {
-            // Create a 16x16 bitmap for the tray icon
-            var bitmap = new Drawing.Bitmap(16, 16);
-            using (var graphics = Drawing.Graphics.FromImage(bitmap))
-            {
-                graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-
-                // Fill background
-                graphics.Clear(Drawing.Color.Transparent);
-
-                // Draw a green circle (indicating monitoring is active)
-                using (var brush = new Drawing.SolidBrush(Drawing.Color.FromArgb(255, 40, 167, 69)))
-                {
-                    graphics.FillEllipse(brush, 1, 1, 14, 14);
-                }
-
-                // Draw a white border
-                using (var pen = new Drawing.Pen(Drawing.Color.White, 1))
-                {
-                    graphics.DrawEllipse(pen, 1, 1, 13, 13);
-                }
-
-                // Draw white "R" letter
-                using (var font = new Drawing.Font("Arial", 9, Drawing.FontStyle.Bold))
-                using (var textBrush = new Drawing.SolidBrush(Drawing.Color.White))
-                {
-                    var format = new Drawing.StringFormat
-                    {
-                        Alignment = Drawing.StringAlignment.Center,
-                        LineAlignment = Drawing.StringAlignment.Center
-                    };
-                    graphics.DrawString("R", font, textBrush, new Drawing.RectangleF(0, -1, 16, 16), format);
-                }
-            }
-
-            // Convert bitmap to icon and keep a reference
-            IntPtr hIcon = bitmap.GetHicon();
-            var icon = Drawing.Icon.FromHandle(hIcon);
-
-            // Create a new icon from the handle to ensure it persists
-            var clonedIcon = (Drawing.Icon)icon.Clone();
-
-            // Clean up the handle
-            DestroyIcon(hIcon);
-
-            return clonedIcon;
-        }
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern bool DestroyIcon(IntPtr handle);
 
         private void Window_StateChanged(object sender, EventArgs e)
         {
