@@ -61,16 +61,16 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <Button Grid.Column="0" Content="➕ Add Program" Style="{StaticResource ModernButton}" 
+                <Button x:Name="AddProgramButton" Grid.Column="0" Content="➕ Add Program" Style="{StaticResource ModernButton}"
                         Margin="0,0,10,0" Click="AddProgram_Click"/>
-                <Button Grid.Column="1" Content="Remove" Padding="15,8" Margin="0,0,10,0" 
-                        Click="RemoveProgram_Click" Background="White" BorderBrush="#999" 
+                <Button x:Name="RemoveButton" Grid.Column="1" Content="Remove" Padding="15,8" Margin="0,0,10,0"
+                        Click="RemoveProgram_Click" Background="White" BorderBrush="#999"
                         BorderThickness="1" Foreground="#333"/>
-                <Button Grid.Column="2" Content="Export Logs" Padding="15,8" Margin="0,0,10,0" 
-                        Click="ExportLogs_Click" Background="White" BorderBrush="#999" 
+                <Button x:Name="ExportLogsButton" Grid.Column="2" Content="Export Logs" Padding="15,8" Margin="0,0,10,0"
+                        Click="ExportLogs_Click" Background="White" BorderBrush="#999"
                         BorderThickness="1" Foreground="#333"/>
-                <Button Grid.Column="3" Content="Settings" Padding="15,8" 
-                        Click="Settings_Click" Background="White" BorderBrush="#999" 
+                <Button x:Name="SettingsButton" Grid.Column="3" Content="Settings" Padding="15,8"
+                        Click="Settings_Click" Background="White" BorderBrush="#999"
                         BorderThickness="1" Foreground="#333"/>
 
                 <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center">
@@ -159,9 +159,9 @@
 
             <Border Grid.Row="0" Background="#e8e8e8" BorderBrush="#d0d0d0" BorderThickness="0,1,0,1" Padding="10,5">
                 <Grid>
-                    <TextBlock Text="Activity Log" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"/>
-                    <Button Content="Clear Log" HorizontalAlignment="Right" Padding="10,3" 
-                            Click="ClearLog_Click" Background="Transparent" 
+                    <TextBlock x:Name="ActivityLogText" Text="Activity Log" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"/>
+                    <Button x:Name="ClearLogButton" Content="Clear Log" HorizontalAlignment="Right" Padding="10,3"
+                            Click="ClearLog_Click" Background="Transparent"
                             BorderBrush="#999" BorderThickness="1" FontSize="11"/>
                 </Grid>
             </Border>

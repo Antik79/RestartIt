@@ -209,6 +209,15 @@ namespace RestartIt
         private CheckBox _startMinimizedCheckBox;
         private ComboBox _languageComboBox;
 
+        // UI elements for localization
+        private TabItem _loggingTab, _emailTab, _appTab, _aboutTab;
+        private Button _okButton, _cancelButton, _browseFolderButton, _testEmailButton;
+        private TextBlock _logPathLabel, _minLogLevelLabel, _maxLogSizeLabel, _keepLogsDaysLabel;
+        private TextBlock _smtpServerLabel, _smtpPortLabel, _senderEmailLabel, _senderNameLabel;
+        private TextBlock _senderPasswordLabel, _recipientEmailLabel, _languageLabel;
+        private TextBlock _startWithWindowsDesc, _minimizeToTrayDesc, _startMinimizedDesc;
+        private TextBlock _aboutDescription, _aboutGithubHeader, _aboutCopyright, _aboutTechStack, _aboutVersionText;
+
         public SettingsDialog(LogSettings logSettings, NotificationSettings notificationSettings, AppSettings appSettings)
         {
             LogSettings = new LogSettings
@@ -238,7 +247,8 @@ namespace RestartIt
             {
                 StartWithWindows = appSettings.StartWithWindows,
                 MinimizeToTray = appSettings.MinimizeToTray,
-                StartMinimized = appSettings.StartMinimized
+                StartMinimized = appSettings.StartMinimized,
+                Language = appSettings.Language
             };
 
             InitializeDialog();
@@ -259,24 +269,24 @@ namespace RestartIt
             var tabControl = new TabControl();
 
             // Logging Tab
-            var loggingTab = new TabItem { Header = "Logging" };
-            loggingTab.Content = CreateLoggingTab();
-            tabControl.Items.Add(loggingTab);
+            _loggingTab = new TabItem { Header = "Logging" };
+            _loggingTab.Content = CreateLoggingTab();
+            tabControl.Items.Add(_loggingTab);
 
             // Email Notifications Tab
-            var emailTab = new TabItem { Header = "Email Notifications" };
-            emailTab.Content = CreateEmailTab();
-            tabControl.Items.Add(emailTab);
+            _emailTab = new TabItem { Header = "Email Notifications" };
+            _emailTab.Content = CreateEmailTab();
+            tabControl.Items.Add(_emailTab);
 
             // Application Tab
-            var appTab = new TabItem { Header = "Application" };
-            appTab.Content = CreateAppTab();
-            tabControl.Items.Add(appTab);
+            _appTab = new TabItem { Header = "Application" };
+            _appTab.Content = CreateAppTab();
+            tabControl.Items.Add(_appTab);
 
             // About Tab
-            var aboutTab = new TabItem { Header = "About" };
-            aboutTab.Content = CreateAboutTab();
-            tabControl.Items.Add(aboutTab);
+            _aboutTab = new TabItem { Header = "About" };
+            _aboutTab.Content = CreateAboutTab();
+            tabControl.Items.Add(_aboutTab);
 
             Grid.SetRow(tabControl, 0);
             mainGrid.Children.Add(tabControl);
@@ -290,7 +300,7 @@ namespace RestartIt
             };
             Grid.SetRow(buttonPanel, 1);
 
-            var okButton = new Button
+            _okButton = new Button
             {
                 Content = "OK",
                 Width = 80,
@@ -298,9 +308,9 @@ namespace RestartIt
                 Margin = new Thickness(0, 0, 10, 0),
                 IsDefault = true
             };
-            okButton.Click += OkButton_Click;
+            _okButton.Click += OkButton_Click;
 
-            var cancelButton = new Button
+            _cancelButton = new Button
             {
                 Content = "Cancel",
                 Width = 80,
@@ -308,11 +318,14 @@ namespace RestartIt
                 IsCancel = true
             };
 
-            buttonPanel.Children.Add(okButton);
-            buttonPanel.Children.Add(cancelButton);
+            buttonPanel.Children.Add(_okButton);
+            buttonPanel.Children.Add(_cancelButton);
             mainGrid.Children.Add(buttonPanel);
 
             Content = mainGrid;
+
+            // Update UI text with localized strings
+            UpdateUIText();
         }
 
         private ScrollViewer CreateLoggingTab()
@@ -335,18 +348,18 @@ namespace RestartIt
             grid.Children.Add(_enableFileLoggingCheckBox);
 
             // Log Path
-            AddLabel(grid, "Log File Directory:", row);
+            _logPathLabel = AddLabelWithReference(grid, "Log File Directory:", row);
             var pathPanel = new DockPanel { Margin = new Thickness(0, 20, 0, 15) };
             Grid.SetRow(pathPanel, row++);
 
-            var browseButton = new Button
+            _browseFolderButton = new Button
             {
                 Content = "Browse...",
                 Width = 80,
                 Margin = new Thickness(5, 0, 0, 0)
             };
-            browseButton.Click += BrowseButton_Click;
-            DockPanel.SetDock(browseButton, Dock.Right);
+            _browseFolderButton.Click += BrowseButton_Click;
+            DockPanel.SetDock(_browseFolderButton, Dock.Right);
 
             _logPathTextBox = new TextBox
             {
@@ -354,12 +367,12 @@ namespace RestartIt
                 Padding = new Thickness(5)
             };
 
-            pathPanel.Children.Add(browseButton);
+            pathPanel.Children.Add(_browseFolderButton);
             pathPanel.Children.Add(_logPathTextBox);
             grid.Children.Add(pathPanel);
 
             // Minimum Log Level
-            AddLabel(grid, "Minimum Log Level:", row);
+            _minLogLevelLabel = AddLabelWithReference(grid, "Minimum Log Level:", row);
             _logLevelComboBox = new ComboBox { Margin = new Thickness(0, 20, 0, 15) };
             _logLevelComboBox.Items.Add(LogLevel.Debug);
             _logLevelComboBox.Items.Add(LogLevel.Info);
@@ -370,7 +383,7 @@ namespace RestartIt
             grid.Children.Add(_logLevelComboBox);
 
             // Max Log Size
-            AddLabel(grid, "Max Log File Size (MB):", row);
+            _maxLogSizeLabel = AddLabelWithReference(grid, "Max Log File Size (MB):", row);
             _maxLogSizeTextBox = new TextBox
             {
                 Text = LogSettings.MaxLogFileSizeMB.ToString(),
@@ -381,7 +394,7 @@ namespace RestartIt
             grid.Children.Add(_maxLogSizeTextBox);
 
             // Keep Logs Days
-            AddLabel(grid, "Keep Log Files For (days):", row);
+            _keepLogsDaysLabel = AddLabelWithReference(grid, "Keep Log Files For (days):", row);
             _keepLogsDaysTextBox = new TextBox
             {
                 Text = LogSettings.KeepLogFilesForDays.ToString(),
@@ -414,11 +427,11 @@ namespace RestartIt
             grid.Children.Add(_enableEmailCheckBox);
 
             // SMTP Server
-            AddLabel(grid, "SMTP Server:", row);
+            _smtpServerLabel = AddLabelWithReference(grid, "SMTP Server:", row);
             _smtpServerTextBox = AddTextBox(grid, NotificationSettings.SmtpServer, row++);
 
             // SMTP Port
-            AddLabel(grid, "SMTP Port:", row);
+            _smtpPortLabel = AddLabelWithReference(grid, "SMTP Port:", row);
             _smtpPortTextBox = AddTextBox(grid, NotificationSettings.SmtpPort.ToString(), row++);
 
             // Use SSL
@@ -432,15 +445,15 @@ namespace RestartIt
             grid.Children.Add(_useSslCheckBox);
 
             // Sender Email
-            AddLabel(grid, "Sender Email:", row);
+            _senderEmailLabel = AddLabelWithReference(grid, "Sender Email:", row);
             _senderEmailTextBox = AddTextBox(grid, NotificationSettings.SenderEmail, row++);
 
             // Sender Name
-            AddLabel(grid, "Sender Name:", row);
+            _senderNameLabel = AddLabelWithReference(grid, "Sender Name:", row);
             _senderNameTextBox = AddTextBox(grid, NotificationSettings.SenderName, row++);
 
             // Sender Password
-            AddLabel(grid, "Sender Password:", row);
+            _senderPasswordLabel = AddLabelWithReference(grid, "Sender Password:", row);
             _senderPasswordBox = new PasswordBox
             {
                 Password = NotificationSettings.SenderPassword,
@@ -451,7 +464,7 @@ namespace RestartIt
             grid.Children.Add(_senderPasswordBox);
 
             // Recipient Email
-            AddLabel(grid, "Recipient Email:", row);
+            _recipientEmailLabel = AddLabelWithReference(grid, "Recipient Email:", row);
             _recipientEmailTextBox = AddTextBox(grid, NotificationSettings.RecipientEmail, row++);
 
             // Notify On Restart
@@ -475,7 +488,7 @@ namespace RestartIt
             grid.Children.Add(_notifyOnFailureCheckBox);
 
             // Test Email Button
-            var testEmailButton = new Button
+            _testEmailButton = new Button
             {
                 Content = "Send Test Email",
                 Width = 120,
@@ -483,9 +496,9 @@ namespace RestartIt
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(0, 10, 0, 0)
             };
-            testEmailButton.Click += TestEmail_Click;
-            Grid.SetRow(testEmailButton, row++);
-            grid.Children.Add(testEmailButton);
+            _testEmailButton.Click += TestEmail_Click;
+            Grid.SetRow(_testEmailButton, row++);
+            grid.Children.Add(_testEmailButton);
 
             return new ScrollViewer { Content = grid, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         }
@@ -585,7 +598,7 @@ namespace RestartIt
             Grid.SetRow(_startWithWindowsCheckBox, row++);
             grid.Children.Add(_startWithWindowsCheckBox);
 
-            var startWithWindowsDesc = new TextBlock
+            _startWithWindowsDesc = new TextBlock
             {
                 Text = "Automatically start RestartIt when Windows starts.",
                 FontSize = 11,
@@ -593,8 +606,8 @@ namespace RestartIt
                 Margin = new Thickness(20, 0, 0, 15),
                 TextWrapping = TextWrapping.Wrap
             };
-            Grid.SetRow(startWithWindowsDesc, row++);
-            grid.Children.Add(startWithWindowsDesc);
+            Grid.SetRow(_startWithWindowsDesc, row++);
+            grid.Children.Add(_startWithWindowsDesc);
 
             // Minimize to Tray
             _minimizeToTrayCheckBox = new CheckBox
@@ -607,7 +620,7 @@ namespace RestartIt
             Grid.SetRow(_minimizeToTrayCheckBox, row++);
             grid.Children.Add(_minimizeToTrayCheckBox);
 
-            var minimizeDesc = new TextBlock
+            _minimizeToTrayDesc = new TextBlock
             {
                 Text = "When minimized, the application will hide to the system tray instead of the taskbar.",
                 FontSize = 11,
@@ -615,8 +628,8 @@ namespace RestartIt
                 Margin = new Thickness(20, 0, 0, 15),
                 TextWrapping = TextWrapping.Wrap
             };
-            Grid.SetRow(minimizeDesc, row++);
-            grid.Children.Add(minimizeDesc);
+            Grid.SetRow(_minimizeToTrayDesc, row++);
+            grid.Children.Add(_minimizeToTrayDesc);
 
             // Start Minimized
             _startMinimizedCheckBox = new CheckBox
@@ -629,7 +642,7 @@ namespace RestartIt
             Grid.SetRow(_startMinimizedCheckBox, row++);
             grid.Children.Add(_startMinimizedCheckBox);
 
-            var startMinimizedDesc = new TextBlock
+            _startMinimizedDesc = new TextBlock
             {
                 Text = "Start RestartIt minimized to system tray (requires 'Minimize to system tray' enabled).",
                 FontSize = 11,
@@ -637,18 +650,18 @@ namespace RestartIt
                 Margin = new Thickness(20, 0, 0, 15),
                 TextWrapping = TextWrapping.Wrap
             };
-            Grid.SetRow(startMinimizedDesc, row++);
-            grid.Children.Add(startMinimizedDesc);
+            Grid.SetRow(_startMinimizedDesc, row++);
+            grid.Children.Add(_startMinimizedDesc);
 
             // Language
-            var languageLabel = new TextBlock
+            _languageLabel = new TextBlock
             {
                 Text = "Language:",
                 FontWeight = FontWeights.SemiBold,
                 Margin = new Thickness(0, 0, 0, 10)
             };
-            Grid.SetRow(languageLabel, row++);
-            grid.Children.Add(languageLabel);
+            Grid.SetRow(_languageLabel, row++);
+            grid.Children.Add(_languageLabel);
 
             _languageComboBox = new ComboBox
             {
@@ -705,37 +718,37 @@ namespace RestartIt
 
             // Version
             var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-            var versionText = new TextBlock
+            _aboutVersionText = new TextBlock
             {
                 Text = $"Version {version.Major}.{version.Minor}.{version.Build}",
                 FontSize = 14,
                 Foreground = System.Windows.Media.Brushes.Gray,
                 Margin = new Thickness(0, 0, 0, 20)
             };
-            Grid.SetRow(versionText, row++);
-            grid.Children.Add(versionText);
+            Grid.SetRow(_aboutVersionText, row++);
+            grid.Children.Add(_aboutVersionText);
 
             // Description
-            var description = new TextBlock
+            _aboutDescription = new TextBlock
             {
                 Text = "Windows Application Monitor - Automatically restart programs that stop running",
                 FontSize = 12,
                 TextWrapping = TextWrapping.Wrap,
                 Margin = new Thickness(0, 0, 0, 20)
             };
-            Grid.SetRow(description, row++);
-            grid.Children.Add(description);
+            Grid.SetRow(_aboutDescription, row++);
+            grid.Children.Add(_aboutDescription);
 
             // GitHub Section
-            var githubHeader = new TextBlock
+            _aboutGithubHeader = new TextBlock
             {
                 Text = "GitHub Repository",
                 FontSize = 12,
                 FontWeight = FontWeights.SemiBold,
                 Margin = new Thickness(0, 0, 0, 5)
             };
-            Grid.SetRow(githubHeader, row++);
-            grid.Children.Add(githubHeader);
+            Grid.SetRow(_aboutGithubHeader, row++);
+            grid.Children.Add(_aboutGithubHeader);
 
             var githubLink = new TextBlock
             {
@@ -763,26 +776,26 @@ namespace RestartIt
             grid.Children.Add(githubLink);
 
             // Copyright
-            var copyright = new TextBlock
+            _aboutCopyright = new TextBlock
             {
                 Text = "Copyright © 2025 Antik79",
                 FontSize = 11,
                 Foreground = System.Windows.Media.Brushes.Gray,
                 Margin = new Thickness(0, 10, 0, 0)
             };
-            Grid.SetRow(copyright, row++);
-            grid.Children.Add(copyright);
+            Grid.SetRow(_aboutCopyright, row++);
+            grid.Children.Add(_aboutCopyright);
 
             // Technologies
-            var techStack = new TextBlock
+            _aboutTechStack = new TextBlock
             {
                 Text = "Built with .NET 8.0 and WPF",
                 FontSize = 10,
                 Foreground = System.Windows.Media.Brushes.Gray,
                 Margin = new Thickness(0, 5, 0, 0)
             };
-            Grid.SetRow(techStack, row++);
-            grid.Children.Add(techStack);
+            Grid.SetRow(_aboutTechStack, row++);
+            grid.Children.Add(_aboutTechStack);
 
             return new ScrollViewer { Content = grid, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         }
@@ -799,6 +812,19 @@ namespace RestartIt
             grid.Children.Add(label);
         }
 
+        private TextBlock AddLabelWithReference(Grid grid, string text, int row)
+        {
+            var label = new TextBlock
+            {
+                Text = text,
+                Margin = new Thickness(0, 0, 0, 5),
+                FontWeight = FontWeights.SemiBold
+            };
+            Grid.SetRow(label, row);
+            grid.Children.Add(label);
+            return label;
+        }
+
         private TextBox AddTextBox(Grid grid, string text, int row)
         {
             var textBox = new TextBox
@@ -810,6 +836,91 @@ namespace RestartIt
             Grid.SetRow(textBox, row);
             grid.Children.Add(textBox);
             return textBox;
+        }
+
+        private void UpdateUIText()
+        {
+            // Update window title
+            Title = LocalizationService.Instance.GetString("Settings.Title", "Settings");
+
+            // Update tab headers
+            _loggingTab.Header = LocalizationService.Instance.GetString("Settings.Logging", "Logging");
+            _emailTab.Header = LocalizationService.Instance.GetString("Settings.EmailNotifications", "Email Notifications");
+            _appTab.Header = LocalizationService.Instance.GetString("Settings.Application", "Application");
+            _aboutTab.Header = LocalizationService.Instance.GetString("Settings.About", "About");
+
+            // Update buttons
+            _okButton.Content = LocalizationService.Instance.GetString("Dialog.OK", "OK");
+            _cancelButton.Content = LocalizationService.Instance.GetString("Dialog.Cancel", "Cancel");
+
+            // Update Logging tab
+            if (_enableFileLoggingCheckBox != null)
+                _enableFileLoggingCheckBox.Content = LocalizationService.Instance.GetString("Settings.Logging.EnableFileLogging", "Enable File Logging");
+            if (_logPathLabel != null)
+                _logPathLabel.Text = LocalizationService.Instance.GetString("Settings.Logging.LogFilePath", "Log File Directory:");
+            if (_browseFolderButton != null)
+                _browseFolderButton.Content = LocalizationService.Instance.GetString("ProgramEdit.Browse", "Browse...");
+            if (_minLogLevelLabel != null)
+                _minLogLevelLabel.Text = LocalizationService.Instance.GetString("Settings.Logging.MinLogLevel", "Minimum Log Level:");
+            if (_maxLogSizeLabel != null)
+                _maxLogSizeLabel.Text = LocalizationService.Instance.GetString("Settings.Logging.MaxFileSize", "Max Log File Size (MB):");
+            if (_keepLogsDaysLabel != null)
+                _keepLogsDaysLabel.Text = LocalizationService.Instance.GetString("Settings.Logging.KeepLogsFor", "Keep Log Files For (days):");
+
+            // Update Email tab
+            if (_enableEmailCheckBox != null)
+                _enableEmailCheckBox.Content = LocalizationService.Instance.GetString("Settings.Email.Enable", "Enable Email Notifications");
+            if (_smtpServerLabel != null)
+                _smtpServerLabel.Text = LocalizationService.Instance.GetString("Settings.Email.SmtpServer", "SMTP Server:");
+            if (_smtpPortLabel != null)
+                _smtpPortLabel.Text = LocalizationService.Instance.GetString("Settings.Email.SmtpPort", "SMTP Port:");
+            if (_useSslCheckBox != null)
+                _useSslCheckBox.Content = LocalizationService.Instance.GetString("Settings.Email.UseSsl", "Use SSL/TLS");
+            if (_senderEmailLabel != null)
+                _senderEmailLabel.Text = LocalizationService.Instance.GetString("Settings.Email.SenderEmail", "Sender Email:");
+            if (_senderNameLabel != null)
+                _senderNameLabel.Text = LocalizationService.Instance.GetString("Settings.Email.SenderName", "Sender Name:");
+            if (_senderPasswordLabel != null)
+                _senderPasswordLabel.Text = LocalizationService.Instance.GetString("Settings.Email.SenderPassword", "Sender Password:");
+            if (_recipientEmailLabel != null)
+                _recipientEmailLabel.Text = LocalizationService.Instance.GetString("Settings.Email.RecipientEmail", "Recipient Email:");
+            if (_notifyOnRestartCheckBox != null)
+                _notifyOnRestartCheckBox.Content = LocalizationService.Instance.GetString("Settings.Email.NotifyOnRestart", "Notify on Successful Restart");
+            if (_notifyOnFailureCheckBox != null)
+                _notifyOnFailureCheckBox.Content = LocalizationService.Instance.GetString("Settings.Email.NotifyOnFailure", "Notify on Restart Failure");
+            if (_testEmailButton != null)
+                _testEmailButton.Content = LocalizationService.Instance.GetString("Settings.Email.TestEmail", "Send Test Email");
+
+            // Update Application tab
+            if (_startWithWindowsCheckBox != null)
+                _startWithWindowsCheckBox.Content = LocalizationService.Instance.GetString("Settings.App.StartWithWindows", "Start with Windows");
+            if (_startWithWindowsDesc != null)
+                _startWithWindowsDesc.Text = LocalizationService.Instance.GetString("Settings.App.StartWithWindowsDesc", "Automatically start RestartIt when Windows starts.");
+            if (_minimizeToTrayCheckBox != null)
+                _minimizeToTrayCheckBox.Content = LocalizationService.Instance.GetString("Settings.App.MinimizeToTray", "Minimize to System Tray");
+            if (_minimizeToTrayDesc != null)
+                _minimizeToTrayDesc.Text = LocalizationService.Instance.GetString("Settings.App.MinimizeToTrayDesc", "When minimized, the application will hide to the system tray instead of the taskbar.");
+            if (_startMinimizedCheckBox != null)
+                _startMinimizedCheckBox.Content = LocalizationService.Instance.GetString("Settings.App.StartMinimized", "Start Minimized");
+            if (_startMinimizedDesc != null)
+                _startMinimizedDesc.Text = LocalizationService.Instance.GetString("Settings.App.StartMinimizedDesc", "Start RestartIt minimized to system tray (requires 'Minimize to system tray' enabled).");
+            if (_languageLabel != null)
+                _languageLabel.Text = LocalizationService.Instance.GetString("Settings.App.Language", "Language:");
+
+            // Update About tab
+            if (_aboutVersionText != null)
+            {
+                var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+                _aboutVersionText.Text = $"{LocalizationService.Instance.GetString("Settings.About.Version", "Version")} {version.Major}.{version.Minor}.{version.Build}";
+            }
+            if (_aboutDescription != null)
+                _aboutDescription.Text = LocalizationService.Instance.GetString("Settings.About.Description", "A Windows desktop application that monitors specified programs and automatically restarts them if they stop running.");
+            if (_aboutGithubHeader != null)
+                _aboutGithubHeader.Text = LocalizationService.Instance.GetString("Settings.About.GitHub", "GitHub Repository");
+            if (_aboutCopyright != null)
+                _aboutCopyright.Text = LocalizationService.Instance.GetString("Settings.About.Copyright", "Copyright © 2025 Antik79");
+            if (_aboutTechStack != null)
+                _aboutTechStack.Text = LocalizationService.Instance.GetString("Settings.About.TechStack", "Built with .NET 8.0 and WPF");
         }
 
         private void BrowseButton_Click(object sender, RoutedEventArgs e)

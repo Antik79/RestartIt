@@ -82,8 +82,11 @@
   "Settings.Email.TestError": "Email Test Failed",
 
   "Settings.App.StartWithWindows": "Start with Windows",
+  "Settings.App.StartWithWindowsDesc": "Automatically start RestartIt when Windows starts.",
   "Settings.App.MinimizeToTray": "Minimize to System Tray",
+  "Settings.App.MinimizeToTrayDesc": "When minimized, the application will hide to the system tray instead of the taskbar.",
   "Settings.App.StartMinimized": "Start Minimized",
+  "Settings.App.StartMinimizedDesc": "Start RestartIt minimized to system tray (requires 'Minimize to system tray' enabled).",
   "Settings.App.Language": "Language:",
 
   "Settings.About.Version": "Version",
@@ -91,9 +94,7 @@
   "Settings.About.GitHub": "GitHub Repository",
   "Settings.About.Copyright": "Copyright © 2025 Antik79",
   "Settings.About.License": "Licensed under the MIT License",
-  "Settings.About.TechStack": "Technology Stack",
-  "Settings.About.Framework": "Framework: .NET 8.0",
-  "Settings.About.UI": "UI: WPF (Windows Presentation Foundation)",
+  "Settings.About.TechStack": "Built with .NET 8.0 and WPF",
 
   "Export.Title": "Export Logs",
   "Export.Filter": "Text Files (*.txt)|*.txt|Log Files (*.log)|*.log|All Files (*.*)|*.*",

@@ -54,6 +54,7 @@ namespace RestartIt
             // Initialize localization
             LoadConfiguration();
             LocalizationService.Instance.LoadLanguage(_configManager.AppSettings.Language);
+            LocalizationService.Instance.LanguageChanged += OnLanguageChanged;
 
             ProgramsDataGrid.ItemsSource = _programs;
 
@@ -61,6 +62,7 @@ namespace RestartIt
             _monitorService.StatusChanged += MonitorService_StatusChanged;
 
             InitializeSystemTray();
+            UpdateUIText();
             _monitorService.Start();
 
             LogMessage(LocalizationService.Instance.GetString("Log.Started", "RestartIt started successfully"), LogLevel.Info);
@@ -359,8 +361,74 @@ namespace RestartIt
                 StatusIndicator.Fill = isRunning ?
                     new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69)) :
                     new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 53, 69));
-                StatusText.Text = isRunning ? "Monitoring Active" : "Monitoring Stopped";
+                StatusText.Text = isRunning ?
+                    LocalizationService.Instance.GetString("MainWindow.MonitoringActive", "Monitoring Active") :
+                    LocalizationService.Instance.GetString("MainWindow.MonitoringStopped", "Monitoring Stopped");
             });
+        }
+
+        private void OnLanguageChanged(object sender, EventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                UpdateUIText();
+            });
+        }
+
+        private void UpdateUIText()
+        {
+            // Update window title
+            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            this.Title = $"{LocalizationService.Instance.GetString("App.Title", "RestartIt - Application Monitor")} v{version.Major}.{version.Minor}.{version.Build}";
+
+            // Update toolbar buttons
+            AddProgramButton.Content = LocalizationService.Instance.GetString("MainWindow.AddProgram", "➕ Add Program");
+            RemoveButton.Content = LocalizationService.Instance.GetString("MainWindow.Remove", "Remove");
+            ExportLogsButton.Content = LocalizationService.Instance.GetString("MainWindow.ExportLogs", "Export Logs");
+            SettingsButton.Content = LocalizationService.Instance.GetString("MainWindow.Settings", "Settings");
+
+            // Update status text
+            bool isRunning = _monitorService.IsRunning;
+            StatusText.Text = isRunning ?
+                LocalizationService.Instance.GetString("MainWindow.MonitoringActive", "Monitoring Active") :
+                LocalizationService.Instance.GetString("MainWindow.MonitoringStopped", "Monitoring Stopped");
+
+            // Update DataGrid column headers
+            ProgramsDataGrid.Columns[0].Header = LocalizationService.Instance.GetString("DataGrid.Enabled", "Enabled");
+            ProgramsDataGrid.Columns[1].Header = LocalizationService.Instance.GetString("DataGrid.ProgramName", "Program Name");
+            ProgramsDataGrid.Columns[2].Header = LocalizationService.Instance.GetString("DataGrid.Path", "Path");
+            ProgramsDataGrid.Columns[3].Header = LocalizationService.Instance.GetString("DataGrid.CheckInterval", "Check Interval (sec)");
+            ProgramsDataGrid.Columns[4].Header = LocalizationService.Instance.GetString("DataGrid.RestartDelay", "Restart Delay (sec)");
+            ProgramsDataGrid.Columns[5].Header = LocalizationService.Instance.GetString("DataGrid.Status", "Status");
+            ProgramsDataGrid.Columns[6].Header = LocalizationService.Instance.GetString("DataGrid.Actions", "Actions");
+
+            // Update the Edit button text in the Actions column
+            if (ProgramsDataGrid.Columns[6] is DataGridTemplateColumn actionsColumn)
+            {
+                // The button text will be updated via binding when the row is rendered
+                ProgramsDataGrid.Items.Refresh();
+            }
+
+            // Update log panel
+            ActivityLogText.Text = LocalizationService.Instance.GetString("MainWindow.ActivityLog", "Activity Log");
+            ClearLogButton.Content = LocalizationService.Instance.GetString("MainWindow.ClearLog", "Clear Log");
+
+            // Update system tray
+            UpdateSystemTrayText();
+        }
+
+        private void UpdateSystemTrayText()
+        {
+            if (_notifyIcon != null)
+            {
+                _notifyIcon.Text = LocalizationService.Instance.GetString("App.TrayTitle", "RestartIt - Application Monitor");
+
+                if (_notifyIcon.ContextMenuStrip != null && _notifyIcon.ContextMenuStrip.Items.Count > 0)
+                {
+                    _notifyIcon.ContextMenuStrip.Items[0].Text = LocalizationService.Instance.GetString("Tray.ShowWindow", "Show Window");
+                    _notifyIcon.ContextMenuStrip.Items[2].Text = LocalizationService.Instance.GetString("Tray.Exit", "Exit");
+                }
+            }
         }
 
         private void LogMessage(string message, LogLevel level)
