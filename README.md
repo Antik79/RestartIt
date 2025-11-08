@@ -1,5 +1,7 @@
 # RestartIt
 
+**Version 1.0.0** | [Download Latest Release](https://github.com/Antik79/RestartIt/releases/latest)
+
 **RestartIt** is a Windows desktop application that monitors specified programs and automatically restarts them if they stop running. Perfect for maintaining critical applications, services, or any software that needs to stay running 24/7.
 
 ## Features

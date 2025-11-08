@@ -7,6 +7,13 @@
 		<Nullable>disable</Nullable>
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<ApplicationIcon>app.ico</ApplicationIcon>
+		<Version>1.0.0</Version>
+		<AssemblyVersion>1.0.0.0</AssemblyVersion>
+		<FileVersion>1.0.0.0</FileVersion>
+		<Company>Antik79</Company>
+		<Product>RestartIt</Product>
+		<Description>Windows Application Monitor - Automatically restart programs that stop running</Description>
+		<Copyright>Copyright © 2025</Copyright>
 	</PropertyGroup>
 
 	<ItemGroup>

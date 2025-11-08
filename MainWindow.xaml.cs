@@ -28,6 +28,10 @@ namespace RestartIt
         {
             InitializeComponent();
 
+            // Set window title with version
+            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            this.Title = $"RestartIt - Application Monitor v{version.Major}.{version.Minor}.{version.Build}";
+
             // Set window icon from App.ico
             try
             {

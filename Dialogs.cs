@@ -272,6 +272,11 @@ namespace RestartIt
             appTab.Content = CreateAppTab();
             tabControl.Items.Add(appTab);
 
+            // About Tab
+            var aboutTab = new TabItem { Header = "About" };
+            aboutTab.Content = CreateAboutTab();
+            tabControl.Items.Add(aboutTab);
+
             Grid.SetRow(tabControl, 0);
             mainGrid.Children.Add(tabControl);
 
@@ -633,6 +638,114 @@ namespace RestartIt
             };
             Grid.SetRow(startMinimizedDesc, row++);
             grid.Children.Add(startMinimizedDesc);
+
+            return new ScrollViewer { Content = grid, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        }
+
+        private ScrollViewer CreateAboutTab()
+        {
+            var grid = new Grid { Margin = new Thickness(20) };
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            int row = 0;
+
+            // Application Name
+            var appName = new TextBlock
+            {
+                Text = "RestartIt",
+                FontSize = 24,
+                FontWeight = FontWeights.Bold,
+                Margin = new Thickness(0, 10, 0, 5)
+            };
+            Grid.SetRow(appName, row++);
+            grid.Children.Add(appName);
+
+            // Version
+            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            var versionText = new TextBlock
+            {
+                Text = $"Version {version.Major}.{version.Minor}.{version.Build}",
+                FontSize = 14,
+                Foreground = System.Windows.Media.Brushes.Gray,
+                Margin = new Thickness(0, 0, 0, 20)
+            };
+            Grid.SetRow(versionText, row++);
+            grid.Children.Add(versionText);
+
+            // Description
+            var description = new TextBlock
+            {
+                Text = "Windows Application Monitor - Automatically restart programs that stop running",
+                FontSize = 12,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 0, 0, 20)
+            };
+            Grid.SetRow(description, row++);
+            grid.Children.Add(description);
+
+            // GitHub Section
+            var githubHeader = new TextBlock
+            {
+                Text = "GitHub Repository",
+                FontSize = 12,
+                FontWeight = FontWeights.SemiBold,
+                Margin = new Thickness(0, 0, 0, 5)
+            };
+            Grid.SetRow(githubHeader, row++);
+            grid.Children.Add(githubHeader);
+
+            var githubLink = new TextBlock
+            {
+                Margin = new Thickness(0, 0, 0, 20)
+            };
+            var hyperlink = new System.Windows.Documents.Hyperlink
+            {
+                NavigateUri = new Uri("https://github.com/Antik79/RestartIt")
+            };
+            hyperlink.Inlines.Add("https://github.com/Antik79/RestartIt");
+            hyperlink.RequestNavigate += (s, e) =>
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = e.Uri.AbsoluteUri,
+                        UseShellExecute = true
+                    });
+                }
+                catch { }
+            };
+            githubLink.Inlines.Add(hyperlink);
+            Grid.SetRow(githubLink, row++);
+            grid.Children.Add(githubLink);
+
+            // Copyright
+            var copyright = new TextBlock
+            {
+                Text = "Copyright © 2025 Antik79",
+                FontSize = 11,
+                Foreground = System.Windows.Media.Brushes.Gray,
+                Margin = new Thickness(0, 10, 0, 0)
+            };
+            Grid.SetRow(copyright, row++);
+            grid.Children.Add(copyright);
+
+            // Technologies
+            var techStack = new TextBlock
+            {
+                Text = "Built with .NET 8.0 and WPF",
+                FontSize = 10,
+                Foreground = System.Windows.Media.Brushes.Gray,
+                Margin = new Thickness(0, 5, 0, 0)
+            };
+            Grid.SetRow(techStack, row++);
+            grid.Children.Add(techStack);
 
             return new ScrollViewer { Content = grid, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         }
