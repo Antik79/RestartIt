@@ -22,8 +22,8 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                CornerRadius="3" 
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="3"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
@@ -35,6 +35,10 @@
                     <Setter Property="Background" Value="#005a9e"/>
                 </Trigger>
             </Style.Triggers>
+        </Style>
+
+        <Style x:Key="CenteredTextColumn" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
     </Window.Resources>
 
@@ -101,10 +105,10 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTextColumn Header="Program Name" Binding="{Binding ProgramName}" Width="150" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Path" Binding="{Binding ExecutablePath}" Width="*" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Check Interval (sec)" Binding="{Binding CheckIntervalSeconds}" Width="120" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Restart Delay (sec)" Binding="{Binding RestartDelaySeconds}" Width="130" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Program Name" Binding="{Binding ProgramName}" Width="150" IsReadOnly="True" ElementStyle="{StaticResource CenteredTextColumn}"/>
+                <DataGridTextColumn Header="Path" Binding="{Binding ExecutablePath}" Width="*" IsReadOnly="True" ElementStyle="{StaticResource CenteredTextColumn}"/>
+                <DataGridTextColumn Header="Check Interval (sec)" Binding="{Binding CheckIntervalSeconds}" Width="120" IsReadOnly="True" ElementStyle="{StaticResource CenteredTextColumn}"/>
+                <DataGridTextColumn Header="Restart Delay (sec)" Binding="{Binding RestartDelaySeconds}" Width="130" IsReadOnly="True" ElementStyle="{StaticResource CenteredTextColumn}"/>
 
                 <DataGridTemplateColumn Header="Status" Width="100">
                     <DataGridTemplateColumn.CellTemplate>
