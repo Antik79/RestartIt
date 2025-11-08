@@ -1,4 +1,10 @@
 {
+  "_metadata": {
+    "code": "nl",
+    "name": "Dutch",
+    "nativeName": "Nederlands",
+    "icon": "🇳🇱"
+  },
   "App.Title": "RestartIt - Applicatie Monitor",
   "App.TrayTitle": "RestartIt - Applicatie Monitor",
 

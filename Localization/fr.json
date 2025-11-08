@@ -1,4 +1,10 @@
 {
+  "_metadata": {
+    "code": "fr",
+    "name": "French",
+    "nativeName": "Français",
+    "icon": "🇫🇷"
+  },
   "App.Title": "RestartIt - Moniteur d'Applications",
   "App.TrayTitle": "RestartIt - Moniteur d'Applications",
 

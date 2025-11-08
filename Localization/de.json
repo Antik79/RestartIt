@@ -1,4 +1,10 @@
 {
+  "_metadata": {
+    "code": "de",
+    "name": "German",
+    "nativeName": "Deutsch",
+    "icon": "🇩🇪"
+  },
   "App.Title": "RestartIt - Anwendungsmonitor",
   "App.TrayTitle": "RestartIt - Anwendungsmonitor",
 

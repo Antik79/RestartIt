@@ -666,7 +666,7 @@ namespace RestartIt
             _languageComboBox = new ComboBox
             {
                 Margin = new Thickness(20, 0, 0, 15),
-                DisplayMemberPath = "Name",
+                DisplayMemberPath = "DisplayName",
                 SelectedValuePath = "Code"
             };
 
