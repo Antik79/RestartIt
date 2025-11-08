@@ -51,16 +51,19 @@ namespace RestartIt
             _logger = new LoggerService(_configManager.LogSettings);
             _monitorService = new ProcessMonitorService(_programs, _logger, _configManager.NotificationSettings);
 
+            // Initialize localization
+            LoadConfiguration();
+            LocalizationService.Instance.LoadLanguage(_configManager.AppSettings.Language);
+
             ProgramsDataGrid.ItemsSource = _programs;
 
             _logger.LogMessageReceived += Logger_LogMessageReceived;
             _monitorService.StatusChanged += MonitorService_StatusChanged;
 
             InitializeSystemTray();
-            LoadConfiguration();
             _monitorService.Start();
 
-            LogMessage("RestartIt started successfully", LogLevel.Info);
+            LogMessage(LocalizationService.Instance.GetString("Log.Started", "RestartIt started successfully"), LogLevel.Info);
 
             // Handle start minimized
             if (_configManager.AppSettings.StartMinimized)
@@ -172,7 +175,7 @@ namespace RestartIt
                 {
                     _programs.Add(editDialog.Program);
                     SaveConfiguration();
-                    LogMessage($"Added program: {editDialog.Program.ProgramName}", LogLevel.Info);
+                    LogMessage(string.Format(LocalizationService.Instance.GetString("Log.ProgramAdded", "Added program: {0}"), editDialog.Program.ProgramName), LogLevel.Info);
                 }
             }
         }
@@ -182,8 +185,8 @@ namespace RestartIt
             if (ProgramsDataGrid.SelectedItem is MonitoredProgram selected)
             {
                 var result = System.Windows.MessageBox.Show(
-                    $"Are you sure you want to remove '{selected.ProgramName}' from monitoring?",
-                    "Confirm Removal",
+                    string.Format(LocalizationService.Instance.GetString("Dialog.RemoveQuestion", "Are you sure you want to remove '{0}' from monitoring?"), selected.ProgramName),
+                    LocalizationService.Instance.GetString("Dialog.ConfirmRemoval", "Confirm Removal"),
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question);
 
@@ -191,12 +194,14 @@ namespace RestartIt
                 {
                     _programs.Remove(selected);
                     SaveConfiguration();
-                    LogMessage($"Removed program: {selected.ProgramName}", LogLevel.Info);
+                    LogMessage(string.Format(LocalizationService.Instance.GetString("Log.ProgramRemoved", "Removed program: {0}"), selected.ProgramName), LogLevel.Info);
                 }
             }
             else
             {
-                System.Windows.MessageBox.Show("Please select a program to remove.", "No Selection",
+                System.Windows.MessageBox.Show(
+                    LocalizationService.Instance.GetString("Dialog.SelectProgramFirst", "Please select a program to remove."),
+                    LocalizationService.Instance.GetString("Dialog.NoSelection", "No Selection"),
                     MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
@@ -209,7 +214,7 @@ namespace RestartIt
                 if (editDialog.ShowDialog() == true)
                 {
                     SaveConfiguration();
-                    LogMessage($"Updated settings for: {program.ProgramName}", LogLevel.Info);
+                    LogMessage(string.Format(LocalizationService.Instance.GetString("Log.ProgramUpdated", "Updated settings for: {0}"), program.ProgramName), LogLevel.Info);
                 }
             }
         }
@@ -234,7 +239,7 @@ namespace RestartIt
                 StartupManager.SetStartup(settingsDialog.AppSettings.StartWithWindows);
 
                 SaveConfiguration();
-                LogMessage("Settings updated", LogLevel.Info);
+                LogMessage(LocalizationService.Instance.GetString("Log.SettingsUpdated", "Settings updated"), LogLevel.Info);
             }
         }
 
@@ -260,20 +265,20 @@ namespace RestartIt
                     {
                         File.Copy(currentLogPath, dialog.FileName, true);
                         System.Windows.MessageBox.Show(
-                            "Logs exported successfully!",
-                            "Export Complete",
+                            LocalizationService.Instance.GetString("Export.LogsExported", "Logs exported successfully!"),
+                            LocalizationService.Instance.GetString("Export.Success", "Export Complete"),
                             MessageBoxButton.OK,
                             MessageBoxImage.Information);
 
-                        LogMessage($"Logs exported to: {dialog.FileName}", LogLevel.Info);
+                        LogMessage(string.Format(LocalizationService.Instance.GetString("Log.LogsExported", "Logs exported to: {0}"), dialog.FileName), LogLevel.Info);
                     }
                     else
                     {
                         // Export UI log if no file exists
                         File.WriteAllText(dialog.FileName, LogTextBlock.Text);
                         System.Windows.MessageBox.Show(
-                            "UI logs exported successfully!",
-                            "Export Complete",
+                            LocalizationService.Instance.GetString("Export.UILogsExported", "UI logs exported successfully!"),
+                            LocalizationService.Instance.GetString("Export.Success", "Export Complete"),
                             MessageBoxButton.OK,
                             MessageBoxImage.Information);
                     }
@@ -281,8 +286,8 @@ namespace RestartIt
                 catch (Exception ex)
                 {
                     System.Windows.MessageBox.Show(
-                        $"Error exporting logs: {ex.Message}",
-                        "Export Error",
+                        string.Format(LocalizationService.Instance.GetString("Export.ErrorMessage", "Error exporting logs: {0}"), ex.Message),
+                        LocalizationService.Instance.GetString("Export.Error", "Export Error"),
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);
                 }
@@ -294,8 +299,9 @@ namespace RestartIt
             SaveConfiguration();
             if ((sender as System.Windows.Controls.CheckBox)?.DataContext is MonitoredProgram program)
             {
-                string status = program.Enabled ? "enabled" : "disabled";
-                LogMessage($"Monitoring {status} for: {program.ProgramName}", LogLevel.Info);
+                string logKey = program.Enabled ? "Log.MonitoringEnabled" : "Log.MonitoringDisabled";
+                string defaultMsg = program.Enabled ? "Monitoring enabled for: {0}" : "Monitoring disabled for: {0}";
+                LogMessage(string.Format(LocalizationService.Instance.GetString(logKey, defaultMsg), program.ProgramName), LogLevel.Info);
             }
         }
 
@@ -373,7 +379,7 @@ namespace RestartIt
 
             _monitorService.Stop();
             SaveConfiguration();
-            LogMessage("RestartIt shutting down", LogLevel.Info);
+            LogMessage(LocalizationService.Instance.GetString("Log.ShuttingDown", "RestartIt shutting down"), LogLevel.Info);
             _logger.Dispose();
 
             if (_notifyIcon != null)

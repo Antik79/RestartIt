@@ -207,6 +207,7 @@ namespace RestartIt
         private CheckBox _startWithWindowsCheckBox;
         private CheckBox _minimizeToTrayCheckBox;
         private CheckBox _startMinimizedCheckBox;
+        private ComboBox _languageComboBox;
 
         public SettingsDialog(LogSettings logSettings, NotificationSettings notificationSettings, AppSettings appSettings)
         {
@@ -568,7 +569,7 @@ namespace RestartIt
         private ScrollViewer CreateAppTab()
         {
             var grid = new Grid { Margin = new Thickness(20) };
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 8; i++)
                 grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
             int row = 0;
@@ -638,6 +639,42 @@ namespace RestartIt
             };
             Grid.SetRow(startMinimizedDesc, row++);
             grid.Children.Add(startMinimizedDesc);
+
+            // Language
+            var languageLabel = new TextBlock
+            {
+                Text = "Language:",
+                FontWeight = FontWeights.SemiBold,
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+            Grid.SetRow(languageLabel, row++);
+            grid.Children.Add(languageLabel);
+
+            _languageComboBox = new ComboBox
+            {
+                Margin = new Thickness(20, 0, 0, 15),
+                DisplayMemberPath = "Name",
+                SelectedValuePath = "Code"
+            };
+
+            var availableLanguages = LocalizationService.GetAvailableLanguages();
+            foreach (var lang in availableLanguages)
+            {
+                _languageComboBox.Items.Add(lang);
+            }
+
+            // Select current language
+            for (int i = 0; i < _languageComboBox.Items.Count; i++)
+            {
+                if (((LanguageInfo)_languageComboBox.Items[i]).Code == AppSettings.Language)
+                {
+                    _languageComboBox.SelectedIndex = i;
+                    break;
+                }
+            }
+
+            Grid.SetRow(_languageComboBox, row++);
+            grid.Children.Add(_languageComboBox);
 
             return new ScrollViewer { Content = grid, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         }
@@ -860,6 +897,13 @@ namespace RestartIt
             AppSettings.StartWithWindows = _startWithWindowsCheckBox.IsChecked ?? false;
             AppSettings.MinimizeToTray = _minimizeToTrayCheckBox.IsChecked ?? true;
             AppSettings.StartMinimized = _startMinimizedCheckBox.IsChecked ?? false;
+
+            // Save language selection
+            if (_languageComboBox.SelectedItem is LanguageInfo selectedLang)
+            {
+                AppSettings.Language = selectedLang.Code;
+                LocalizationService.Instance.LoadLanguage(selectedLang.Code);
+            }
 
             DialogResult = true;
             Close();

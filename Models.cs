@@ -117,6 +117,7 @@ namespace RestartIt
         public bool StartWithWindows { get; set; } = false;
         public bool MinimizeToTray { get; set; } = true;
         public bool StartMinimized { get; set; } = false;
+        public string Language { get; set; } = "en";
     }
 
     // Application Configuration

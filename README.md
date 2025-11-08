@@ -1,6 +1,6 @@
 # RestartIt
 
-**Version 1.0.0** | [Download Latest Release](https://github.com/Antik79/RestartIt/releases/latest)
+**Version 1.1.0** | [Download Latest Release](https://github.com/Antik79/RestartIt/releases/latest)
 
 **RestartIt** is a Windows desktop application that monitors specified programs and automatically restarts them if they stop running. Perfect for maintaining critical applications, services, or any software that needs to stay running 24/7.
 
@@ -25,6 +25,7 @@
 
 ### User Interface
 - **Clean Modern UI** - Built with WPF for a professional appearance
+- **Multi-Language Support** - Available in English, Dutch, French, and German
 - **System Tray Integration** - Runs quietly in the background
 - **Easy Configuration** - Simple dialogs for adding and editing monitored programs
 - **Per-Program Settings** - Individual check intervals and restart delays
@@ -130,6 +131,24 @@ The compiled application will be in `bin/Release/net8.0-windows/`
    - **Start with Windows** - Launch at Windows startup
    - **Minimize to Tray** - Hide to system tray when minimized
    - **Start Minimized** - Launch minimized to tray
+   - **Language** - Select your preferred language (English, Nederlands, Français, Deutsch)
+
+## Language Support
+
+RestartIt is available in multiple languages:
+- **English** (Default)
+- **Nederlands** (Dutch)
+- **Français** (French)
+- **Deutsch** (German)
+
+### Changing Language
+
+1. Open **Settings** → **Application** tab
+2. Select your preferred language from the dropdown
+3. Click **OK** to apply
+4. Messages, dialogs, and notifications will display in the selected language
+
+**Note:** The main UI labels and buttons are currently in English. Full UI localization will be available in a future release.
 
 ## Configuration
 
