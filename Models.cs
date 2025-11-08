@@ -104,6 +104,7 @@ namespace RestartIt
         public int SmtpPort { get; set; } = 587;
         public bool UseSSL { get; set; } = true;
         public string SenderEmail { get; set; } = "";
+        public string SenderName { get; set; } = "RestartIt Monitor";
         public string SenderPassword { get; set; } = "";
         public string RecipientEmail { get; set; } = "";
         public bool NotifyOnRestart { get; set; } = true;
@@ -179,6 +180,18 @@ namespace RestartIt
                         LogSettings = config.LogSettings ?? new LogSettings();
                         NotificationSettings = config.NotificationSettings ?? new NotificationSettings();
                         AppSettings = config.AppSettings ?? new AppSettings();
+
+                        // Decrypt the email password if it's encrypted
+                        if (!string.IsNullOrEmpty(NotificationSettings.SenderPassword))
+                        {
+                            // Check if password appears to be encrypted (Base64 format)
+                            if (CredentialManager.IsEncrypted(NotificationSettings.SenderPassword))
+                            {
+                                NotificationSettings.SenderPassword = CredentialManager.Decrypt(NotificationSettings.SenderPassword);
+                            }
+                            // If not encrypted (legacy plain text), it will remain as-is and will be encrypted on next save
+                        }
+
                         return config;
                     }
                 }
@@ -200,12 +213,36 @@ namespace RestartIt
         {
             try
             {
+                // Create a copy of the config to avoid modifying the original
+                var configToSave = new AppConfiguration
+                {
+                    Programs = config.Programs,
+                    LogSettings = config.LogSettings,
+                    AppSettings = config.AppSettings,
+                    NotificationSettings = new NotificationSettings
+                    {
+                        EnableEmailNotifications = config.NotificationSettings.EnableEmailNotifications,
+                        SmtpServer = config.NotificationSettings.SmtpServer,
+                        SmtpPort = config.NotificationSettings.SmtpPort,
+                        UseSSL = config.NotificationSettings.UseSSL,
+                        SenderEmail = config.NotificationSettings.SenderEmail,
+                        SenderName = config.NotificationSettings.SenderName,
+                        RecipientEmail = config.NotificationSettings.RecipientEmail,
+                        NotifyOnRestart = config.NotificationSettings.NotifyOnRestart,
+                        NotifyOnFailure = config.NotificationSettings.NotifyOnFailure,
+                        // Encrypt the password before saving
+                        SenderPassword = string.IsNullOrEmpty(config.NotificationSettings.SenderPassword)
+                            ? string.Empty
+                            : CredentialManager.Encrypt(config.NotificationSettings.SenderPassword)
+                    }
+                };
+
                 var options = new JsonSerializerOptions
                 {
                     WriteIndented = true
                 };
 
-                string json = JsonSerializer.Serialize(config, options);
+                string json = JsonSerializer.Serialize(configToSave, options);
                 File.WriteAllText(_configPath, json);
             }
             catch (Exception ex)

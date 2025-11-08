@@ -9,6 +9,7 @@ using Microsoft.Win32;
 using Forms = System.Windows.Forms;
 using Drawing = System.Drawing;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace RestartIt
 {
@@ -21,6 +22,8 @@ namespace RestartIt
         private Forms.NotifyIcon _notifyIcon;
         private Drawing.Icon _trayIcon;
         private bool _isClosing = false;
+        private StringBuilder _logBuffer = new StringBuilder();
+        private const int MAX_LOG_LINES = 1000;
 
         public MainWindow()
         {
@@ -338,6 +341,7 @@ namespace RestartIt
 
         private void ClearLog_Click(object sender, RoutedEventArgs e)
         {
+            _logBuffer.Clear();
             LogTextBlock.Text = string.Empty;
         }
 
@@ -354,7 +358,24 @@ namespace RestartIt
                     _ => "•"
                 };
 
-                LogTextBlock.Text += $"[{timestamp}] {levelIndicator} {e.Message}\n";
+                // Append new log entry to buffer
+                _logBuffer.AppendLine($"[{timestamp}] {levelIndicator} {e.Message}");
+
+                // Keep only the last MAX_LOG_LINES lines to prevent memory leak
+                var lines = _logBuffer.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+                if (lines.Length > MAX_LOG_LINES)
+                {
+                    _logBuffer.Clear();
+                    // Keep only the last MAX_LOG_LINES lines
+                    var linesToKeep = lines.Skip(lines.Length - MAX_LOG_LINES);
+                    foreach (var line in linesToKeep)
+                    {
+                        _logBuffer.AppendLine(line);
+                    }
+                }
+
+                // Update UI with bounded log content
+                LogTextBlock.Text = _logBuffer.ToString();
 
                 // Auto-scroll to bottom
                 if (LogTextBlock.Parent is ScrollViewer scrollViewer)

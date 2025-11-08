@@ -198,6 +198,7 @@ namespace RestartIt
         private TextBox _smtpPortTextBox;
         private CheckBox _useSslCheckBox;
         private TextBox _senderEmailTextBox;
+        private TextBox _senderNameTextBox;
         private PasswordBox _senderPasswordBox;
         private TextBox _recipientEmailTextBox;
         private CheckBox _notifyOnRestartCheckBox;
@@ -225,6 +226,7 @@ namespace RestartIt
                 SmtpPort = notificationSettings.SmtpPort,
                 UseSSL = notificationSettings.UseSSL,
                 SenderEmail = notificationSettings.SenderEmail,
+                SenderName = notificationSettings.SenderName,
                 SenderPassword = notificationSettings.SenderPassword,
                 RecipientEmail = notificationSettings.RecipientEmail,
                 NotifyOnRestart = notificationSettings.NotifyOnRestart,
@@ -389,7 +391,7 @@ namespace RestartIt
         private ScrollViewer CreateEmailTab()
         {
             var grid = new Grid { Margin = new Thickness(20) };
-            for (int i = 0; i < 11; i++)
+            for (int i = 0; i < 12; i++)
                 grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
             int row = 0;
@@ -426,6 +428,10 @@ namespace RestartIt
             // Sender Email
             AddLabel(grid, "Sender Email:", row);
             _senderEmailTextBox = AddTextBox(grid, NotificationSettings.SenderEmail, row++);
+
+            // Sender Name
+            AddLabel(grid, "Sender Name:", row);
+            _senderNameTextBox = AddTextBox(grid, NotificationSettings.SenderName, row++);
 
             // Sender Password
             AddLabel(grid, "Sender Password:", row);
@@ -517,6 +523,7 @@ namespace RestartIt
                 SmtpPort = port,
                 UseSSL = _useSslCheckBox.IsChecked ?? true,
                 SenderEmail = _senderEmailTextBox.Text,
+                SenderName = _senderNameTextBox.Text,
                 SenderPassword = _senderPasswordBox.Password,
                 RecipientEmail = _recipientEmailTextBox.Text
             };
@@ -730,6 +737,7 @@ namespace RestartIt
             NotificationSettings.SmtpPort = int.Parse(_smtpPortTextBox.Text);
             NotificationSettings.UseSSL = _useSslCheckBox.IsChecked ?? true;
             NotificationSettings.SenderEmail = _senderEmailTextBox.Text;
+            NotificationSettings.SenderName = _senderNameTextBox.Text;
             NotificationSettings.SenderPassword = _senderPasswordBox.Password;
             NotificationSettings.RecipientEmail = _recipientEmailTextBox.Text;
             NotificationSettings.NotifyOnRestart = _notifyOnRestartCheckBox.IsChecked ?? true;

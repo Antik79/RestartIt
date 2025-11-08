@@ -52,7 +52,7 @@ namespace RestartIt
 
                     var message = new MailMessage
                     {
-                        From = new MailAddress(_settings.SenderEmail),
+                        From = new MailAddress(_settings.SenderEmail, _settings.SenderName),
                         Subject = $"[RestartIt] {subject}",
                         Body = $"{body}\n\nTimestamp: {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n\nSent by RestartIt Application Monitor",
                         IsBodyHtml = false
@@ -165,12 +165,30 @@ namespace RestartIt
                     fileInfo.Length > _settings.MaxLogFileSizeMB * 1024 * 1024)
                 {
                     CloseLogFile();
-                    InitializeLogFile();
+                    try
+                    {
+                        InitializeLogFile();
+                    }
+                    catch (Exception initEx)
+                    {
+                        Debug.WriteLine($"Error reinitializing log file after rotation: {initEx.Message}");
+                        // Ensure writer is null if initialization fails
+                        _logWriter = null;
+                    }
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error checking log rotation: {ex.Message}");
+                // Ensure log writer is properly closed on error
+                try
+                {
+                    CloseLogFile();
+                }
+                catch
+                {
+                    // Ignore errors during cleanup
+                }
             }
         }
 
@@ -397,17 +415,28 @@ namespace RestartIt
                 string processName = Path.GetFileNameWithoutExtension(program.ExecutablePath);
                 var processes = Process.GetProcessesByName(processName);
 
-                return processes.Any(p =>
+                try
                 {
-                    try
+                    return processes.Any(p =>
                     {
-                        return p.MainModule?.FileName?.Equals(program.ExecutablePath, StringComparison.OrdinalIgnoreCase) ?? false;
-                    }
-                    catch
+                        try
+                        {
+                            return p.MainModule?.FileName?.Equals(program.ExecutablePath, StringComparison.OrdinalIgnoreCase) ?? false;
+                        }
+                        catch
+                        {
+                            return false;
+                        }
+                    });
+                }
+                finally
+                {
+                    // Properly dispose all process handles to prevent resource leak
+                    foreach (var process in processes)
                     {
-                        return false;
+                        process?.Dispose();
                     }
-                });
+                }
             }
             catch (Exception ex)
             {
