@@ -1010,10 +1010,18 @@ namespace RestartIt
             AppSettings.StartMinimized = _startMinimizedCheckBox.IsChecked ?? false;
 
             // Save language selection
+            System.Diagnostics.Debug.WriteLine($"Language ComboBox SelectedItem: {_languageComboBox.SelectedItem}");
+            System.Diagnostics.Debug.WriteLine($"Language ComboBox SelectedItem Type: {_languageComboBox.SelectedItem?.GetType()}");
+
             if (_languageComboBox.SelectedItem is LanguageInfo selectedLang)
             {
+                System.Diagnostics.Debug.WriteLine($"Selected language: {selectedLang.Code} - {selectedLang.NativeName}");
                 AppSettings.Language = selectedLang.Code;
                 LocalizationService.Instance.LoadLanguage(selectedLang.Code);
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("SelectedItem is NOT a LanguageInfo!");
             }
 
             DialogResult = true;

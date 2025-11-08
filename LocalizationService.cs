@@ -24,12 +24,15 @@ namespace RestartIt
 
         public void LoadLanguage(string languageCode)
         {
+            System.Diagnostics.Debug.WriteLine($"LoadLanguage called with code: {languageCode}");
             try
             {
                 string localizationPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Localization", $"{languageCode}.json");
+                System.Diagnostics.Debug.WriteLine($"Looking for language file at: {localizationPath}");
 
                 if (!File.Exists(localizationPath))
                 {
+                    System.Diagnostics.Debug.WriteLine($"Language file not found, falling back to English");
                     // Fallback to English if language file not found
                     languageCode = "en";
                     localizationPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Localization", $"{languageCode}.json");
@@ -38,9 +41,34 @@ namespace RestartIt
                 if (File.Exists(localizationPath))
                 {
                     string json = File.ReadAllText(localizationPath);
-                    _translations = JsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? new Dictionary<string, string>();
+
+                    // Parse JSON and extract only string key-value pairs (skip _metadata object)
+                    using (JsonDocument doc = JsonDocument.Parse(json))
+                    {
+                        _translations = new Dictionary<string, string>();
+
+                        foreach (JsonProperty property in doc.RootElement.EnumerateObject())
+                        {
+                            // Skip _metadata since it's an object, not a string
+                            if (property.Name == "_metadata")
+                                continue;
+
+                            // Only add if the value is a string
+                            if (property.Value.ValueKind == JsonValueKind.String)
+                            {
+                                _translations[property.Name] = property.Value.GetString();
+                            }
+                        }
+                    }
+
                     _currentLanguage = languageCode;
+                    System.Diagnostics.Debug.WriteLine($"Language loaded successfully: {languageCode}, Translations count: {_translations.Count}");
+                    System.Diagnostics.Debug.WriteLine($"Firing LanguageChanged event, subscribers: {LanguageChanged?.GetInvocationList().Length ?? 0}");
                     LanguageChanged?.Invoke(this, EventArgs.Empty);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"Language file still not found after fallback!");
                 }
             }
             catch (Exception ex)
