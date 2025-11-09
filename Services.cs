@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
+using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -40,15 +41,41 @@ namespace RestartIt
                 return;
             }
 
+            SecureString securePassword = null;
             try
             {
+                // Decrypt password to SecureString for secure handling
+                if (!string.IsNullOrEmpty(_settings.SenderPassword))
+                {
+                    // Check if password is encrypted (Base64 format)
+                    if (CredentialManager.IsEncrypted(_settings.SenderPassword))
+                    {
+                        securePassword = CredentialManager.DecryptToSecureString(_settings.SenderPassword);
+                    }
+                    else
+                    {
+                        // Legacy plain text password - convert to SecureString
+                        securePassword = new SecureString();
+                        foreach (char c in _settings.SenderPassword)
+                        {
+                            securePassword.AppendChar(c);
+                        }
+                    }
+                }
+                else
+                {
+                    securePassword = new SecureString();
+                }
+
                 using (var client = new SmtpClient(_settings.SmtpServer, _settings.SmtpPort))
                 {
                     client.EnableSsl = _settings.UseSSL;
                     client.Timeout = 10000; // 10 seconds timeout
                     client.DeliveryMethod = SmtpDeliveryMethod.Network;
                     client.UseDefaultCredentials = false;
-                    client.Credentials = new NetworkCredential(_settings.SenderEmail, _settings.SenderPassword);
+                    
+                    // Use SecureString with NetworkCredential for secure password handling
+                    client.Credentials = new NetworkCredential(_settings.SenderEmail, securePassword);
 
                     var message = new MailMessage
                     {
@@ -68,6 +95,11 @@ namespace RestartIt
             {
                 Debug.WriteLine($"Error sending email notification: {ex.Message}");
                 Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
+            finally
+            {
+                // Always dispose SecureString to clear it from memory
+                securePassword?.Dispose();
             }
         }
     }
@@ -426,33 +458,32 @@ namespace RestartIt
 
         private bool IsProcessRunning(MonitoredProgram program)
         {
+            Process[] processes = null;
             try
             {
                 string processName = Path.GetFileNameWithoutExtension(program.ExecutablePath);
-                var processes = Process.GetProcessesByName(processName);
+                processes = Process.GetProcessesByName(processName);
 
-                try
+                // Check all processes and find matches
+                bool isRunning = false;
+                foreach (var process in processes)
                 {
-                    return processes.Any(p =>
+                    try
                     {
-                        try
+                        if (process.MainModule?.FileName?.Equals(program.ExecutablePath, StringComparison.OrdinalIgnoreCase) == true)
                         {
-                            return p.MainModule?.FileName?.Equals(program.ExecutablePath, StringComparison.OrdinalIgnoreCase) ?? false;
+                            isRunning = true;
+                            break; // Found a match, no need to check further
                         }
-                        catch
-                        {
-                            return false;
-                        }
-                    });
-                }
-                finally
-                {
-                    // Properly dispose all process handles to prevent resource leak
-                    foreach (var process in processes)
+                    }
+                    catch
                     {
-                        process?.Dispose();
+                        // Access denied or process exited - continue checking other processes
+                        continue;
                     }
                 }
+
+                return isRunning;
             }
             catch (Exception ex)
             {
@@ -463,19 +494,111 @@ namespace RestartIt
                 _logger.Log(message, LogLevel.Error);
                 return false;
             }
+            finally
+            {
+                // Always dispose all process handles to prevent resource leak
+                if (processes != null)
+                {
+                    foreach (var process in processes)
+                    {
+                        try
+                        {
+                            process?.Dispose();
+                        }
+                        catch
+                        {
+                            // Ignore disposal errors - process may have already exited
+                        }
+                    }
+                }
+            }
         }
 
         private void RestartProgram(MonitoredProgram program)
         {
             try
             {
+                // Validate executable path before attempting to start
+                if (!PathValidator.ValidateExecutablePath(program.ExecutablePath, out string pathError))
+                {
+                    program.Status = "Failed";
+                    string message = string.Format(
+                        LocalizationService.Instance.GetString("Log.ValidationFailed", "Cannot restart {0}: {1}"),
+                        program.ProgramName,
+                        pathError);
+                    _logger.Log(message, LogLevel.Error);
+
+                    // Send email notification on validation failure
+                    if (_notificationSettings.NotifyOnFailure)
+                    {
+                        _emailService.SendNotification(
+                            $"Restart Failed: {program.ProgramName}",
+                            $"Failed to restart the program '{program.ProgramName}' due to validation error.\n\n" +
+                            $"Executable: {program.ExecutablePath}\n" +
+                            $"Error: {pathError}\n" +
+                            $"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                    }
+                    return;
+                }
+
+                // Validate working directory if provided
+                if (!string.IsNullOrWhiteSpace(program.WorkingDirectory))
+                {
+                    if (!PathValidator.ValidateWorkingDirectory(program.WorkingDirectory, out string dirError))
+                    {
+                        program.Status = "Failed";
+                        string message = string.Format(
+                            LocalizationService.Instance.GetString("Log.WorkingDirectoryInvalid", "Cannot restart {0}: Working directory invalid - {1}"),
+                            program.ProgramName,
+                            dirError);
+                        _logger.Log(message, LogLevel.Error);
+
+                        if (_notificationSettings.NotifyOnFailure)
+                        {
+                            _emailService.SendNotification(
+                                $"Restart Failed: {program.ProgramName}",
+                                $"Failed to restart the program '{program.ProgramName}' due to invalid working directory.\n\n" +
+                                $"Executable: {program.ExecutablePath}\n" +
+                                $"Working Directory: {program.WorkingDirectory}\n" +
+                                $"Error: {dirError}\n" +
+                                $"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                        }
+                        return;
+                    }
+                }
+
+                // Validate and sanitize arguments
+                if (!PathValidator.ValidateAndSanitizeArguments(program.Arguments, out string sanitizedArguments, out string argsError))
+                {
+                    program.Status = "Failed";
+                    string message = string.Format(
+                        LocalizationService.Instance.GetString("Log.ArgumentsInvalid", "Cannot restart {0}: Arguments invalid - {1}"),
+                        program.ProgramName,
+                        argsError);
+                    _logger.Log(message, LogLevel.Error);
+
+                    if (_notificationSettings.NotifyOnFailure)
+                    {
+                        _emailService.SendNotification(
+                            $"Restart Failed: {program.ProgramName}",
+                            $"Failed to restart the program '{program.ProgramName}' due to invalid arguments.\n\n" +
+                            $"Executable: {program.ExecutablePath}\n" +
+                            $"Error: {argsError}\n" +
+                            $"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                    }
+                    return;
+                }
+
+                // Determine working directory
+                string workingDir = string.IsNullOrEmpty(program.WorkingDirectory)
+                    ? Path.GetDirectoryName(program.ExecutablePath)
+                    : program.WorkingDirectory;
+
                 var startInfo = new ProcessStartInfo
                 {
                     FileName = program.ExecutablePath,
-                    Arguments = program.Arguments ?? string.Empty,
-                    WorkingDirectory = string.IsNullOrEmpty(program.WorkingDirectory)
-                        ? Path.GetDirectoryName(program.ExecutablePath)
-                        : program.WorkingDirectory,
+                    Arguments = sanitizedArguments,
+                    WorkingDirectory = workingDir,
                     UseShellExecute = false
                 };
 
@@ -483,10 +606,10 @@ namespace RestartIt
                 program.LastRestartTime = DateTime.Now;
                 program.Status = "Running";
 
-                string message = string.Format(
+                string successMessage = string.Format(
                     LocalizationService.Instance.GetString("Log.SuccessfullyRestarted", "Successfully restarted {0}"),
                     program.ProgramName);
-                _logger.Log(message, LogLevel.Info);
+                _logger.Log(successMessage, LogLevel.Info);
 
                 // Send email notification on successful restart
                 if (_notificationSettings.NotifyOnRestart)

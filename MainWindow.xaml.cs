@@ -109,7 +109,7 @@ namespace RestartIt
             // Create context menu
             var contextMenu = new Forms.ContextMenuStrip();
 
-            var showItem = new Forms.ToolStripMenuItem("Show Window");
+            var showItem = new Forms.ToolStripMenuItem(LocalizationService.Instance.GetString("Tray.ShowWindow", "Show Window"));
             showItem.Click += (s, e) =>
             {
                 Show();
@@ -166,8 +166,8 @@ namespace RestartIt
         {
             var dialog = new Microsoft.Win32.OpenFileDialog
             {
-                Filter = "Executable Files (*.exe)|*.exe|All Files (*.*)|*.*",
-                Title = "Select Program to Monitor"
+                Filter = LocalizationService.Instance.GetString("Dialog.ExecutableFilesFilter", "Executable Files (*.exe)|*.exe|All Files (*.*)|*.*"),
+                Title = LocalizationService.Instance.GetString("Dialog.SelectProgram", "Select Program to Monitor")
             };
 
             if (dialog.ShowDialog() == true)
@@ -249,8 +249,8 @@ namespace RestartIt
         {
             var dialog = new Microsoft.Win32.SaveFileDialog
             {
-                Filter = "Text Files (*.txt)|*.txt|Log Files (*.log)|*.log|All Files (*.*)|*.*",
-                Title = "Export Logs",
+                Filter = LocalizationService.Instance.GetString("Export.Filter", "Text Files (*.txt)|*.txt|Log Files (*.log)|*.log|All Files (*.*)|*.*"),
+                Title = LocalizationService.Instance.GetString("Export.Title", "Export Logs"),
                 FileName = $"RestartIt_Export_{DateTime.Now:yyyy-MM-dd_HHmmss}.txt"
             };
 

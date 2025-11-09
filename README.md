@@ -1,6 +1,6 @@
 # RestartIt
 
-**Version 1.2.1** | [Download Latest Release](https://github.com/Antik79/RestartIt/releases/latest)
+**Version 1.3.0** | [Download Latest Release](https://github.com/Antik79/RestartIt/releases/latest)
 
 **RestartIt** is a Windows desktop application that monitors specified programs and automatically restarts them if they stop running. Perfect for maintaining critical applications, services, or any software that needs to stay running 24/7.
 
@@ -24,7 +24,8 @@
 - **Activity Display** - Real-time activity log in the UI with bounded buffer (prevents memory leaks)
 
 ### User Interface
-- **Clean Modern UI** - Built with WPF for a professional appearance
+- **Modern Enhanced UI** - Complete redesign with card-based layout, gradient buttons, and subtle shadows
+- **Clean Professional Design** - Built with WPF and custom styling (zero dependencies)
 - **Multi-Language Support** - Available in 16 languages with real-time switching
 - **Modular Language System** - Add new languages by simply dropping JSON files
 - **System Tray Integration** - Runs quietly in the background
@@ -272,6 +273,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 For a detailed list of changes in each version, see [CHANGELOG.md](CHANGELOG.md).
 
 ### Recent Updates
+
+**v1.3.0** (2025-01-27)
+- **UI Overhaul**: Complete redesign with Enhanced Custom Styling - modern card-based layout, gradient buttons, shadows, and improved spacing
+- **Localization Improvements**: All hardcoded strings replaced with localization calls, English fallback support added
+- **Security Enhancements**: SecureString for password handling, improved input validation
+- **Bug Fixes**: Fixed process handle leaks, improved resource management
 
 **v1.2.1** (2025-11-09)
 - Fixed critical bug: Enable/disable monitor toggle not working for programs disabled at launch

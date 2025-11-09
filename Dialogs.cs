@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Security;
 using System.Windows;
 using System.Windows.Controls;
 using Forms = System.Windows.Forms;
@@ -45,7 +46,9 @@ namespace RestartIt
 
         private void InitializeDialog()
         {
-            Title = _isNewProgram ? "Add Program" : "Edit Program";
+            Title = _isNewProgram ? 
+                LocalizationService.Instance.GetString("ProgramEdit.AddTitle", "Add Program") : 
+                LocalizationService.Instance.GetString("ProgramEdit.Title", "Edit Program");
             Width = 500;
             Height = 500;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
@@ -62,28 +65,28 @@ namespace RestartIt
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
             // Program Name
-            AddLabel(grid, "Program Name:", 0);
+            AddLabel(grid, LocalizationService.Instance.GetString("ProgramEdit.ProgramName", "Program Name:"), 0);
             _nameTextBox = AddTextBox(grid, Program.ProgramName, 0);
 
             // Executable Path
-            AddLabel(grid, "Executable Path:", 1);
+            AddLabel(grid, LocalizationService.Instance.GetString("ProgramEdit.ExecutablePath", "Executable Path:"), 1);
             _pathTextBox = AddTextBox(grid, Program.ExecutablePath, 1);
             _pathTextBox.IsReadOnly = _isNewProgram;
 
             // Arguments
-            AddLabel(grid, "Arguments (optional):", 2);
+            AddLabel(grid, LocalizationService.Instance.GetString("ProgramEdit.ArgumentsOptional", "Arguments (optional):"), 2);
             _argsTextBox = AddTextBox(grid, Program.Arguments, 2);
 
             // Working Directory
-            AddLabel(grid, "Working Directory (optional):", 3);
+            AddLabel(grid, LocalizationService.Instance.GetString("ProgramEdit.WorkingDirectoryOptional", "Working Directory (optional):"), 3);
             _workingDirTextBox = AddTextBox(grid, Program.WorkingDirectory, 3);
 
             // Check Interval
-            AddLabel(grid, "Check Interval (seconds):", 4);
+            AddLabel(grid, LocalizationService.Instance.GetString("ProgramEdit.CheckInterval", "Check Interval (seconds):"), 4);
             _checkIntervalTextBox = AddTextBox(grid, Program.CheckIntervalSeconds.ToString(), 4);
 
             // Restart Delay
-            AddLabel(grid, "Restart Delay (seconds):", 5);
+            AddLabel(grid, LocalizationService.Instance.GetString("ProgramEdit.RestartDelay", "Restart Delay (seconds):"), 5);
             _restartDelayTextBox = AddTextBox(grid, Program.RestartDelaySeconds.ToString(), 5);
 
             // Buttons
@@ -97,7 +100,7 @@ namespace RestartIt
 
             var okButton = new Button
             {
-                Content = "OK",
+                Content = LocalizationService.Instance.GetString("Dialog.OK", "OK"),
                 Width = 80,
                 Height = 30,
                 Margin = new Thickness(0, 0, 10, 0),
@@ -107,7 +110,7 @@ namespace RestartIt
 
             var cancelButton = new Button
             {
-                Content = "Cancel",
+                Content = LocalizationService.Instance.GetString("Dialog.Cancel", "Cancel"),
                 Width = 80,
                 Height = 30,
                 IsCancel = true
@@ -147,31 +150,99 @@ namespace RestartIt
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
+            // Validate program name
             if (string.IsNullOrWhiteSpace(_nameTextBox.Text))
             {
-                MessageBox.Show("Please enter a program name.", "Validation Error",
+                MessageBox.Show(
+                    LocalizationService.Instance.GetString("ProgramEdit.ProgramNameRequired", "Please enter a program name."),
+                    LocalizationService.Instance.GetString("ProgramEdit.ValidationError", "Validation Error"),
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
+            // Validate executable path
+            string executablePath = _pathTextBox.Text.Trim();
+            if (!PathValidator.ValidateExecutablePath(executablePath, out string pathError))
+            {
+                MessageBox.Show(
+                    pathError,
+                    LocalizationService.Instance.GetString("ProgramEdit.ValidationError", "Validation Error"),
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Normalize the executable path
+            string normalizedPath = PathValidator.NormalizePath(executablePath);
+            if (normalizedPath == null)
+            {
+                MessageBox.Show(
+                    LocalizationService.Instance.GetString("Validation.InvalidPathFormat", "The path format is invalid."),
+                    LocalizationService.Instance.GetString("ProgramEdit.ValidationError", "Validation Error"),
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Validate working directory
+            string workingDirectory = _workingDirTextBox.Text.Trim();
+            if (!PathValidator.ValidateWorkingDirectory(workingDirectory, out string dirError))
+            {
+                MessageBox.Show(
+                    dirError,
+                    LocalizationService.Instance.GetString("ProgramEdit.ValidationError", "Validation Error"),
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Normalize working directory if provided
+            string normalizedWorkingDir = null;
+            if (!string.IsNullOrWhiteSpace(workingDirectory))
+            {
+                normalizedWorkingDir = PathValidator.NormalizePath(workingDirectory);
+                if (normalizedWorkingDir == null)
+                {
+                    MessageBox.Show(
+                        LocalizationService.Instance.GetString("Validation.InvalidPathFormat", "The path format is invalid."),
+                        LocalizationService.Instance.GetString("ProgramEdit.ValidationError", "Validation Error"),
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+
+            // Validate and sanitize arguments
+            if (!PathValidator.ValidateAndSanitizeArguments(_argsTextBox.Text, out string sanitizedArguments, out string argsError))
+            {
+                MessageBox.Show(
+                    argsError,
+                    LocalizationService.Instance.GetString("ProgramEdit.ValidationError", "Validation Error"),
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Validate check interval
             if (!int.TryParse(_checkIntervalTextBox.Text, out int checkInterval) || checkInterval < 1)
             {
-                MessageBox.Show("Check interval must be a positive number.", "Validation Error",
+                MessageBox.Show(
+                    LocalizationService.Instance.GetString("ProgramEdit.InvalidInterval", "Check interval must be a positive number."),
+                    LocalizationService.Instance.GetString("ProgramEdit.ValidationError", "Validation Error"),
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
+            // Validate restart delay
             if (!int.TryParse(_restartDelayTextBox.Text, out int restartDelay) || restartDelay < 0)
             {
-                MessageBox.Show("Restart delay must be zero or a positive number.", "Validation Error",
+                MessageBox.Show(
+                    LocalizationService.Instance.GetString("ProgramEdit.InvalidDelay", "Restart delay must be zero or a positive number."),
+                    LocalizationService.Instance.GetString("ProgramEdit.ValidationError", "Validation Error"),
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            Program.ProgramName = _nameTextBox.Text;
-            Program.ExecutablePath = _pathTextBox.Text;
-            Program.Arguments = _argsTextBox.Text;
-            Program.WorkingDirectory = _workingDirTextBox.Text;
+            // All validation passed - assign values
+            Program.ProgramName = _nameTextBox.Text.Trim();
+            Program.ExecutablePath = normalizedPath;
+            Program.Arguments = sanitizedArguments;
+            Program.WorkingDirectory = normalizedWorkingDir ?? string.Empty;
             Program.CheckIntervalSeconds = checkInterval;
             Program.RestartDelaySeconds = restartDelay;
 
@@ -208,6 +279,7 @@ namespace RestartIt
         private CheckBox _minimizeToTrayCheckBox;
         private CheckBox _startMinimizedCheckBox;
         private ComboBox _languageComboBox;
+        private string _originalEncryptedPassword; // Store original encrypted password
 
         // UI elements for localization
         private TabItem _loggingTab, _emailTab, _appTab, _aboutTab;
@@ -242,6 +314,9 @@ namespace RestartIt
                 NotifyOnRestart = notificationSettings.NotifyOnRestart,
                 NotifyOnFailure = notificationSettings.NotifyOnFailure
             };
+            
+            // Store original encrypted password (don't display it for security)
+            _originalEncryptedPassword = notificationSettings.SenderPassword;
 
             AppSettings = new AppSettings
             {
@@ -256,7 +331,7 @@ namespace RestartIt
 
         private void InitializeDialog()
         {
-            Title = "Settings";
+            Title = LocalizationService.Instance.GetString("Settings.Title", "Settings");
             Width = 600;
             Height = 550;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
@@ -269,22 +344,22 @@ namespace RestartIt
             var tabControl = new TabControl();
 
             // Logging Tab
-            _loggingTab = new TabItem { Header = "Logging" };
+            _loggingTab = new TabItem { Header = LocalizationService.Instance.GetString("Settings.Logging", "Logging") };
             _loggingTab.Content = CreateLoggingTab();
             tabControl.Items.Add(_loggingTab);
 
             // Email Notifications Tab
-            _emailTab = new TabItem { Header = "Email Notifications" };
+            _emailTab = new TabItem { Header = LocalizationService.Instance.GetString("Settings.EmailNotifications", "Email Notifications") };
             _emailTab.Content = CreateEmailTab();
             tabControl.Items.Add(_emailTab);
 
             // Application Tab
-            _appTab = new TabItem { Header = "Application" };
+            _appTab = new TabItem { Header = LocalizationService.Instance.GetString("Settings.Application", "Application") };
             _appTab.Content = CreateAppTab();
             tabControl.Items.Add(_appTab);
 
             // About Tab
-            _aboutTab = new TabItem { Header = "About" };
+            _aboutTab = new TabItem { Header = LocalizationService.Instance.GetString("Settings.About", "About") };
             _aboutTab.Content = CreateAboutTab();
             tabControl.Items.Add(_aboutTab);
 
@@ -302,7 +377,7 @@ namespace RestartIt
 
             _okButton = new Button
             {
-                Content = "OK",
+                Content = LocalizationService.Instance.GetString("Dialog.OK", "OK"),
                 Width = 80,
                 Height = 30,
                 Margin = new Thickness(0, 0, 10, 0),
@@ -312,7 +387,7 @@ namespace RestartIt
 
             _cancelButton = new Button
             {
-                Content = "Cancel",
+                Content = LocalizationService.Instance.GetString("Dialog.Cancel", "Cancel"),
                 Width = 80,
                 Height = 30,
                 IsCancel = true
@@ -348,13 +423,13 @@ namespace RestartIt
             grid.Children.Add(_enableFileLoggingCheckBox);
 
             // Log Path
-            _logPathLabel = AddLabelWithReference(grid, "Log File Directory:", row);
+            _logPathLabel = AddLabelWithReference(grid, LocalizationService.Instance.GetString("Settings.Logging.LogFileDirectory", "Log File Directory:"), row);
             var pathPanel = new DockPanel { Margin = new Thickness(0, 20, 0, 15) };
             Grid.SetRow(pathPanel, row++);
 
             _browseFolderButton = new Button
             {
-                Content = "Browse...",
+                Content = LocalizationService.Instance.GetString("ProgramEdit.Browse", "Browse..."),
                 Width = 80,
                 Margin = new Thickness(5, 0, 0, 0)
             };
@@ -453,10 +528,12 @@ namespace RestartIt
             _senderNameTextBox = AddTextBox(grid, NotificationSettings.SenderName, row++);
 
             // Sender Password
+            // Note: We don't display the existing encrypted password for security reasons.
+            // User must re-enter password if they want to change it.
             _senderPasswordLabel = AddLabelWithReference(grid, "Sender Password:", row);
             _senderPasswordBox = new PasswordBox
             {
-                Password = NotificationSettings.SenderPassword,
+                Password = string.Empty, // Always start empty - don't display encrypted password
                 Margin = new Thickness(0, 20, 0, 15),
                 Padding = new Thickness(5)
             };
@@ -508,74 +585,97 @@ namespace RestartIt
             // Validate settings first
             if (string.IsNullOrWhiteSpace(_smtpServerTextBox.Text))
             {
-                MessageBox.Show("Please enter SMTP server.", "Validation Error",
+                MessageBox.Show(
+                    LocalizationService.Instance.GetString("Settings.Email.SmtpServerRequired", "Please enter SMTP server."),
+                    LocalizationService.Instance.GetString("ProgramEdit.ValidationError", "Validation Error"),
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (!int.TryParse(_smtpPortTextBox.Text, out int port))
             {
-                MessageBox.Show("Please enter valid SMTP port.", "Validation Error",
+                MessageBox.Show(
+                    LocalizationService.Instance.GetString("Settings.Email.SmtpPortInvalid", "Please enter valid SMTP port."),
+                    LocalizationService.Instance.GetString("ProgramEdit.ValidationError", "Validation Error"),
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(_senderEmailTextBox.Text))
             {
-                MessageBox.Show("Please enter sender email.", "Validation Error",
+                MessageBox.Show(
+                    LocalizationService.Instance.GetString("Settings.Email.SenderEmailRequired", "Please enter sender email."),
+                    LocalizationService.Instance.GetString("ProgramEdit.ValidationError", "Validation Error"),
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(_recipientEmailTextBox.Text))
             {
-                MessageBox.Show("Please enter recipient email.", "Validation Error",
+                MessageBox.Show(
+                    LocalizationService.Instance.GetString("Settings.Email.RecipientEmailRequired", "Please enter recipient email."),
+                    LocalizationService.Instance.GetString("ProgramEdit.ValidationError", "Validation Error"),
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             // Create temp settings for test
-            var testSettings = new NotificationSettings
-            {
-                EnableEmailNotifications = true,
-                SmtpServer = _smtpServerTextBox.Text,
-                SmtpPort = port,
-                UseSSL = _useSslCheckBox.IsChecked ?? true,
-                SenderEmail = _senderEmailTextBox.Text,
-                SenderName = _senderNameTextBox.Text,
-                SenderPassword = _senderPasswordBox.Password,
-                RecipientEmail = _recipientEmailTextBox.Text
-            };
-
-            // Send test email
-            var emailService = new EmailNotificationService(testSettings);
-
+            // Convert password to SecureString and encrypt for test (consistent with save behavior)
+            SecureString testSecurePassword = null;
+            string encryptedTestPassword = string.Empty;
+            
             try
             {
-                emailService.SendNotification(
-                    "Test Email from RestartIt",
-                    "This is a test email to verify your email notification settings are working correctly.\n\n" +
-                    "If you receive this email, your settings are configured properly!");
+                if (!string.IsNullOrEmpty(_senderPasswordBox.Password))
+                {
+                    testSecurePassword = new SecureString();
+                    foreach (char c in _senderPasswordBox.Password)
+                    {
+                        testSecurePassword.AppendChar(c);
+                    }
+                    encryptedTestPassword = CredentialManager.EncryptSecureString(testSecurePassword);
+                }
+                
+                var testSettings = new NotificationSettings
+                {
+                    EnableEmailNotifications = true,
+                    SmtpServer = _smtpServerTextBox.Text,
+                    SmtpPort = port,
+                    UseSSL = _useSslCheckBox.IsChecked ?? true,
+                    SenderEmail = _senderEmailTextBox.Text,
+                    SenderName = _senderNameTextBox.Text,
+                    SenderPassword = encryptedTestPassword,
+                    RecipientEmail = _recipientEmailTextBox.Text
+                };
 
-                MessageBox.Show(
-                    "Test email has been sent! Please check your inbox.\n\n" +
-                    "Note: It may take a few moments to arrive. Check your spam folder if you don't see it.",
-                    "Test Email Sent",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                // Send test email
+                var emailService = new EmailNotificationService(testSettings);
+
+                try
+                {
+                    emailService.SendNotification(
+                        LocalizationService.Instance.GetString("Settings.Email.TestSubject", "Test Email from RestartIt"),
+                        LocalizationService.Instance.GetString("Settings.Email.TestBody", "This is a test email to verify your email notification settings are working correctly.\n\nIf you receive this email, your settings are configured properly!"));
+
+                    MessageBox.Show(
+                        LocalizationService.Instance.GetString("Settings.Email.TestSuccessMessage", "Test email sent successfully! Check your inbox."),
+                        LocalizationService.Instance.GetString("Settings.Email.TestSuccess", "Test Email Sent"),
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        string.Format(LocalizationService.Instance.GetString("Settings.Email.TestErrorMessage", "Failed to send test email:\n\n{0}\n\nCommon issues:\n• Wrong SMTP server or port\n• Invalid credentials\n• App password required (Gmail)\n• Firewall blocking SMTP"), ex.Message),
+                        LocalizationService.Instance.GetString("Settings.Email.TestError", "Email Test Failed"),
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
             }
-            catch (Exception ex)
+            finally
             {
-                MessageBox.Show(
-                    $"Failed to send test email:\n\n{ex.Message}\n\n" +
-                    "Common issues:\n" +
-                    "• Wrong SMTP server or port\n" +
-                    "• Invalid credentials\n" +
-                    "• App password required (Gmail)\n" +
-                    "• Firewall blocking SMTP",
-                    "Email Test Failed",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                // Always dispose SecureString to clear it from memory
+                testSecurePassword?.Dispose();
             }
         }
 
@@ -972,14 +1072,18 @@ namespace RestartIt
 
                 if (string.IsNullOrWhiteSpace(_senderEmailTextBox.Text) || !_senderEmailTextBox.Text.Contains("@"))
                 {
-                    MessageBox.Show("Please enter a valid sender email address.", "Validation Error",
+                    MessageBox.Show(
+                        LocalizationService.Instance.GetString("Settings.Email.SenderEmailRequired", "Please enter sender email."),
+                        LocalizationService.Instance.GetString("ProgramEdit.ValidationError", "Validation Error"),
                         MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
                 if (string.IsNullOrWhiteSpace(_recipientEmailTextBox.Text) || !_recipientEmailTextBox.Text.Contains("@"))
                 {
-                    MessageBox.Show("Please enter a valid recipient email address.", "Validation Error",
+                    MessageBox.Show(
+                        LocalizationService.Instance.GetString("Settings.Email.RecipientEmailRequired", "Please enter recipient email."),
+                        LocalizationService.Instance.GetString("ProgramEdit.ValidationError", "Validation Error"),
                         MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
@@ -999,7 +1103,35 @@ namespace RestartIt
             NotificationSettings.UseSSL = _useSslCheckBox.IsChecked ?? true;
             NotificationSettings.SenderEmail = _senderEmailTextBox.Text;
             NotificationSettings.SenderName = _senderNameTextBox.Text;
-            NotificationSettings.SenderPassword = _senderPasswordBox.Password;
+            
+            // Convert PasswordBox password to SecureString and encrypt immediately
+            // Only update password if user entered a new one (PasswordBox is not empty)
+            SecureString securePassword = null;
+            try
+            {
+                if (!string.IsNullOrEmpty(_senderPasswordBox.Password))
+                {
+                    // User entered a new password - convert to SecureString and encrypt
+                    securePassword = new SecureString();
+                    foreach (char c in _senderPasswordBox.Password)
+                    {
+                        securePassword.AppendChar(c);
+                    }
+                    // Encrypt SecureString immediately - password never stored as plain text
+                    NotificationSettings.SenderPassword = CredentialManager.EncryptSecureString(securePassword);
+                }
+                else
+                {
+                    // User didn't enter a new password - keep the original encrypted password
+                    NotificationSettings.SenderPassword = _originalEncryptedPassword ?? string.Empty;
+                }
+            }
+            finally
+            {
+                // Clear SecureString from memory immediately
+                securePassword?.Dispose();
+            }
+            
             NotificationSettings.RecipientEmail = _recipientEmailTextBox.Text;
             NotificationSettings.NotifyOnRestart = _notifyOnRestartCheckBox.IsChecked ?? true;
             NotificationSettings.NotifyOnFailure = _notifyOnFailureCheckBox.IsChecked ?? true;

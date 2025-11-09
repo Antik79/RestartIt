@@ -182,16 +182,9 @@ namespace RestartIt
                         NotificationSettings = config.NotificationSettings ?? new NotificationSettings();
                         AppSettings = config.AppSettings ?? new AppSettings();
 
-                        // Decrypt the email password if it's encrypted
-                        if (!string.IsNullOrEmpty(NotificationSettings.SenderPassword))
-                        {
-                            // Check if password appears to be encrypted (Base64 format)
-                            if (CredentialManager.IsEncrypted(NotificationSettings.SenderPassword))
-                            {
-                                NotificationSettings.SenderPassword = CredentialManager.Decrypt(NotificationSettings.SenderPassword);
-                            }
-                            // If not encrypted (legacy plain text), it will remain as-is and will be encrypted on next save
-                        }
+                        // Keep password encrypted in memory - only decrypt to SecureString when actually using it
+                        // If password is plain text (legacy), it will be encrypted on next save
+                        // EmailNotificationService will handle both encrypted and plain text passwords
 
                         return config;
                     }
@@ -215,27 +208,43 @@ namespace RestartIt
             try
             {
                 // Create a copy of the config to avoid modifying the original
+                var notificationSettings = new NotificationSettings
+                {
+                    EnableEmailNotifications = config.NotificationSettings.EnableEmailNotifications,
+                    SmtpServer = config.NotificationSettings.SmtpServer,
+                    SmtpPort = config.NotificationSettings.SmtpPort,
+                    UseSSL = config.NotificationSettings.UseSSL,
+                    SenderEmail = config.NotificationSettings.SenderEmail,
+                    SenderName = config.NotificationSettings.SenderName,
+                    RecipientEmail = config.NotificationSettings.RecipientEmail,
+                    NotifyOnRestart = config.NotificationSettings.NotifyOnRestart,
+                    NotifyOnFailure = config.NotificationSettings.NotifyOnFailure
+                };
+
+                // Encrypt the password before saving
+                // If password is already encrypted, keep it as-is
+                // If password is plain text (legacy), encrypt it now
+                if (string.IsNullOrEmpty(config.NotificationSettings.SenderPassword))
+                {
+                    notificationSettings.SenderPassword = string.Empty;
+                }
+                else if (CredentialManager.IsEncrypted(config.NotificationSettings.SenderPassword))
+                {
+                    // Already encrypted - keep as-is
+                    notificationSettings.SenderPassword = config.NotificationSettings.SenderPassword;
+                }
+                else
+                {
+                    // Plain text (legacy) - encrypt it now
+                    notificationSettings.SenderPassword = CredentialManager.Encrypt(config.NotificationSettings.SenderPassword);
+                }
+
                 var configToSave = new AppConfiguration
                 {
                     Programs = config.Programs,
                     LogSettings = config.LogSettings,
                     AppSettings = config.AppSettings,
-                    NotificationSettings = new NotificationSettings
-                    {
-                        EnableEmailNotifications = config.NotificationSettings.EnableEmailNotifications,
-                        SmtpServer = config.NotificationSettings.SmtpServer,
-                        SmtpPort = config.NotificationSettings.SmtpPort,
-                        UseSSL = config.NotificationSettings.UseSSL,
-                        SenderEmail = config.NotificationSettings.SenderEmail,
-                        SenderName = config.NotificationSettings.SenderName,
-                        RecipientEmail = config.NotificationSettings.RecipientEmail,
-                        NotifyOnRestart = config.NotificationSettings.NotifyOnRestart,
-                        NotifyOnFailure = config.NotificationSettings.NotifyOnFailure,
-                        // Encrypt the password before saving
-                        SenderPassword = string.IsNullOrEmpty(config.NotificationSettings.SenderPassword)
-                            ? string.Empty
-                            : CredentialManager.Encrypt(config.NotificationSettings.SenderPassword)
-                    }
+                    NotificationSettings = notificationSettings
                 };
 
                 var options = new JsonSerializerOptions

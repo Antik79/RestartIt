@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2025-01-27
+
+### Added
+- Enhanced Custom Styling - Modern UI overhaul with zero dependencies
+  - Modern color palette with professional blue theme
+  - Card-based layout with subtle shadows for depth
+  - Gradient primary buttons with hover effects
+  - Rounded corners (6-10px radius) throughout
+  - Improved spacing and padding (16-20px)
+  - Elevated containers with shadow effects
+  - Modern status badges with rounded backgrounds
+- English fallback language support - Missing translations automatically fall back to English
+- Comprehensive input validation for file paths and command-line arguments
+- Secure password handling using SecureString for in-memory operations
+
+### Changed
+- Complete UI redesign with Enhanced Custom Styling
+  - Toolbar wrapped in card-style container with shadow
+  - DataGrid with modern headers and alternating row backgrounds
+  - Log panel with card-style design and improved readability
+  - Increased row height (52px) for better readability
+  - Removed grid lines, added subtle alternating row colors
+- All hardcoded English strings replaced with localization calls
+- Password encryption now uses SecureString for better security
+
+### Fixed
+- Process handle leaks in IsProcessRunning method - all Process objects now properly disposed
+- Missing localization keys for validation messages
+- Hardcoded strings in dialogs and file dialogs
+- Email test validation messages now properly localized
+- All user-facing strings now use localization system
+
+### Security
+- Enhanced password security with SecureString for in-memory handling
+- Improved input validation to prevent path traversal and invalid arguments
+- Better resource management with explicit process disposal
+
 ## [1.2.1] - 2025-11-09
 
 ### Fixed
@@ -80,7 +117,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add/Edit/Remove monitored programs
 - Configuration persistence in %AppData%\RestartIt\config.json
 
-[Unreleased]: https://github.com/Antik79/RestartIt/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/Antik79/RestartIt/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/Antik79/RestartIt/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/Antik79/RestartIt/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/Antik79/RestartIt/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/Antik79/RestartIt/compare/v1.0.0...v1.1.0

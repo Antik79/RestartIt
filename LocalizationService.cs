@@ -10,6 +10,7 @@ namespace RestartIt
     {
         private static LocalizationService _instance;
         private Dictionary<string, string> _translations;
+        private Dictionary<string, string> _englishTranslations; // Fallback translations
         private string _currentLanguage;
 
         public static LocalizationService Instance => _instance ??= new LocalizationService();
@@ -19,7 +20,47 @@ namespace RestartIt
         private LocalizationService()
         {
             _translations = new Dictionary<string, string>();
+            _englishTranslations = new Dictionary<string, string>();
             _currentLanguage = "en";
+            
+            // Load English translations as fallback
+            LoadEnglishFallback();
+        }
+
+        /// <summary>
+        /// Loads English translations as a fallback for missing keys.
+        /// </summary>
+        private void LoadEnglishFallback()
+        {
+            try
+            {
+                string englishPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Localization", "en.json");
+                if (File.Exists(englishPath))
+                {
+                    string json = File.ReadAllText(englishPath);
+                    using (JsonDocument doc = JsonDocument.Parse(json))
+                    {
+                        _englishTranslations = new Dictionary<string, string>();
+
+                        foreach (JsonProperty property in doc.RootElement.EnumerateObject())
+                        {
+                            if (property.Name == "_metadata")
+                                continue;
+
+                            if (property.Value.ValueKind == JsonValueKind.String)
+                            {
+                                _englishTranslations[property.Name] = property.Value.GetString();
+                            }
+                        }
+                    }
+                    System.Diagnostics.Debug.WriteLine($"English fallback loaded: {_englishTranslations.Count} translations");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading English fallback: {ex.Message}");
+                _englishTranslations = new Dictionary<string, string>();
+            }
         }
 
         public void LoadLanguage(string languageCode)
@@ -78,12 +119,31 @@ namespace RestartIt
             }
         }
 
+        /// <summary>
+        /// Gets a localized string for the given key.
+        /// Falls back to English translation if the key is missing in the current language.
+        /// Falls back to defaultValue or the key itself if not found in English either.
+        /// </summary>
+        /// <param name="key">The translation key</param>
+        /// <param name="defaultValue">Optional default value if key is not found in current language or English</param>
+        /// <returns>The translated string, English fallback, defaultValue, or the key itself</returns>
         public string GetString(string key, string defaultValue = null)
         {
+            // First, try the current language
             if (_translations.TryGetValue(key, out string value))
             {
                 return value;
             }
+
+            // If not found in current language and current language is not English, try English fallback
+            if (_currentLanguage != "en" && _englishTranslations.TryGetValue(key, out string englishValue))
+            {
+                System.Diagnostics.Debug.WriteLine($"Translation key '{key}' not found in {_currentLanguage}, using English fallback");
+                return englishValue;
+            }
+
+            // If not found in English either (or current language is English), use defaultValue or the key itself
+            System.Diagnostics.Debug.WriteLine($"Translation key '{key}' not found in {_currentLanguage} or English, using default");
             return defaultValue ?? key;
         }
 
