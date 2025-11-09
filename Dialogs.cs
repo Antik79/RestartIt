@@ -7,9 +7,16 @@ using Forms = System.Windows.Forms;
 
 namespace RestartIt
 {
-    // Program Edit Dialog
+    /// <summary>
+    /// Dialog window for adding or editing a monitored program.
+    /// Provides validation for executable paths, working directories, and arguments.
+    /// </summary>
     public class ProgramEditDialog : Window
     {
+        /// <summary>
+        /// Gets the MonitoredProgram object with the user's input.
+        /// Only valid if DialogResult is true.
+        /// </summary>
         public MonitoredProgram Program { get; private set; }
         private bool _isNewProgram;
 
@@ -20,6 +27,10 @@ namespace RestartIt
         private TextBox _checkIntervalTextBox;
         private TextBox _restartDelayTextBox;
 
+        /// <summary>
+        /// Initializes a new instance for adding a new program.
+        /// </summary>
+        /// <param name="executablePath">The path to the executable file selected by the user</param>
         public ProgramEditDialog(string executablePath)
         {
             _isNewProgram = true;
@@ -37,6 +48,10 @@ namespace RestartIt
             InitializeDialog();
         }
 
+        /// <summary>
+        /// Initializes a new instance for editing an existing program.
+        /// </summary>
+        /// <param name="program">The existing MonitoredProgram to edit</param>
         public ProgramEditDialog(MonitoredProgram program)
         {
             _isNewProgram = false;
@@ -148,6 +163,12 @@ namespace RestartIt
             return textBox;
         }
 
+        /// <summary>
+        /// Handles the OK button click event.
+        /// Validates all input fields and saves the program configuration if valid.
+        /// </summary>
+        /// <param name="sender">The event sender</param>
+        /// <param name="e">The event arguments</param>
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
             // Validate program name
@@ -251,11 +272,30 @@ namespace RestartIt
         }
     }
 
-    // Settings Dialog with Tabs
+    /// <summary>
+    /// Dialog window for configuring application settings.
+    /// Contains tabs for Logging, Email Notifications, Application settings, and About information.
+    /// Handles secure password management and real-time UI localization updates.
+    /// </summary>
     public class SettingsDialog : Window
     {
+        /// <summary>
+        /// Gets the log settings configured by the user.
+        /// Only valid if DialogResult is true.
+        /// </summary>
         public LogSettings LogSettings { get; private set; }
+        
+        /// <summary>
+        /// Gets the notification settings configured by the user.
+        /// Only valid if DialogResult is true.
+        /// Password is encrypted using DPAPI before being stored.
+        /// </summary>
         public NotificationSettings NotificationSettings { get; private set; }
+        
+        /// <summary>
+        /// Gets the application settings configured by the user.
+        /// Only valid if DialogResult is true.
+        /// </summary>
         public AppSettings AppSettings { get; private set; }
 
         private TextBox _logPathTextBox;
@@ -290,6 +330,12 @@ namespace RestartIt
         private TextBlock _startWithWindowsDesc, _minimizeToTrayDesc, _startMinimizedDesc;
         private TextBlock _aboutDescription, _aboutGithubHeader, _aboutCopyright, _aboutTechStack, _aboutVersionText;
 
+        /// <summary>
+        /// Initializes a new instance of the SettingsDialog with the current settings.
+        /// </summary>
+        /// <param name="logSettings">Current logging settings</param>
+        /// <param name="notificationSettings">Current notification settings (password should be encrypted)</param>
+        /// <param name="appSettings">Current application settings</param>
         public SettingsDialog(LogSettings logSettings, NotificationSettings notificationSettings, AppSettings appSettings)
         {
             LogSettings = new LogSettings
@@ -580,6 +626,13 @@ namespace RestartIt
             return new ScrollViewer { Content = grid, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         }
 
+        /// <summary>
+        /// Handles the Test Email button click event.
+        /// Validates email settings and sends a test email to verify configuration.
+        /// Uses SecureString for password handling during the test.
+        /// </summary>
+        /// <param name="sender">The event sender</param>
+        /// <param name="e">The event arguments</param>
         private void TestEmail_Click(object sender, RoutedEventArgs e)
         {
             // Validate settings first
@@ -766,13 +819,24 @@ namespace RestartIt
             _languageComboBox = new ComboBox
             {
                 Margin = new Thickness(20, 0, 0, 15),
-                DisplayMemberPath = "DisplayName",
                 SelectedValuePath = "Code"
             };
+
+            // Create ItemTemplate using DisplayName property which already includes icon + name
+            // Using simple TextBlock binding to DisplayName - WPF should handle emoji rendering via font fallback
+            var itemTemplate = new DataTemplate();
+            var textBlockFactory = new FrameworkElementFactory(typeof(TextBlock));
+            textBlockFactory.SetBinding(TextBlock.TextProperty, new System.Windows.Data.Binding("DisplayName"));
+            textBlockFactory.SetValue(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Center);
+            // No explicit font set - uses system default, which should support emoji via font fallback
+            itemTemplate.VisualTree = textBlockFactory;
+            _languageComboBox.ItemTemplate = itemTemplate;
 
             var availableLanguages = LocalizationService.GetAvailableLanguages();
             foreach (var lang in availableLanguages)
             {
+                // Debug: Verify Icon values are loaded
+                System.Diagnostics.Debug.WriteLine($"Language: {lang.Code}, Icon: '{lang.Icon}', DisplayName: '{lang.DisplayName}'");
                 _languageComboBox.Items.Add(lang);
             }
 
@@ -938,6 +1002,10 @@ namespace RestartIt
             return textBox;
         }
 
+        /// <summary>
+        /// Updates all UI text elements with localized strings.
+        /// Called when the language changes to refresh the dialog text.
+        /// </summary>
         private void UpdateUIText()
         {
             // Update window title

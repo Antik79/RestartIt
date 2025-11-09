@@ -6,6 +6,11 @@ using System.Text.Json;
 
 namespace RestartIt
 {
+    /// <summary>
+    /// Singleton service for managing application localization (i18n).
+    /// Loads translations from JSON files in the Localization folder.
+    /// Provides English fallback for missing translations.
+    /// </summary>
     public class LocalizationService
     {
         private static LocalizationService _instance;
@@ -13,8 +18,15 @@ namespace RestartIt
         private Dictionary<string, string> _englishTranslations; // Fallback translations
         private string _currentLanguage;
 
+        /// <summary>
+        /// Gets the singleton instance of LocalizationService.
+        /// </summary>
         public static LocalizationService Instance => _instance ??= new LocalizationService();
 
+        /// <summary>
+        /// Event raised when the language is changed.
+        /// Subscribers should update their UI elements.
+        /// </summary>
         public event EventHandler LanguageChanged;
 
         private LocalizationService()
@@ -63,6 +75,11 @@ namespace RestartIt
             }
         }
 
+        /// <summary>
+        /// Loads translations for the specified language code.
+        /// Falls back to English if the language file is not found.
+        /// </summary>
+        /// <param name="languageCode">The two-letter language code (e.g., "en", "de", "fr")</param>
         public void LoadLanguage(string languageCode)
         {
             System.Diagnostics.Debug.WriteLine($"LoadLanguage called with code: {languageCode}");
@@ -147,8 +164,16 @@ namespace RestartIt
             return defaultValue ?? key;
         }
 
+        /// <summary>
+        /// Gets the currently loaded language code.
+        /// </summary>
         public string CurrentLanguage => _currentLanguage;
 
+        /// <summary>
+        /// Scans the Localization folder and returns a list of available languages.
+        /// Languages are discovered from JSON files with _metadata sections.
+        /// </summary>
+        /// <returns>List of available languages, sorted by native name</returns>
         public static List<LanguageInfo> GetAvailableLanguages()
         {
             var languages = new List<LanguageInfo>();
@@ -245,18 +270,29 @@ namespace RestartIt
         }
     }
 
+    /// <summary>
+    /// Represents information about an available language.
+    /// </summary>
     public class LanguageInfo
     {
+        /// <summary>Gets or sets the two-letter language code (e.g., "en", "de").</summary>
         public string Code { get; set; }
+        /// <summary>Gets or sets the English name of the language.</summary>
         public string Name { get; set; }
+        /// <summary>Gets or sets the native name of the language (e.g., "Deutsch" for German).</summary>
         public string NativeName { get; set; }
+        /// <summary>Gets or sets the flag emoji icon for the language (e.g., "🇬🇧").</summary>
         public string Icon { get; set; }
 
-        // Display name for dropdown: "{icon} {nativeName}" if icon exists, otherwise just nativeName
+        /// <summary>
+        /// Gets the display name for the language dropdown: "{icon} {nativeName}" if icon exists, otherwise just nativeName.
+        /// </summary>
         public string DisplayName => string.IsNullOrEmpty(Icon) ? NativeName : $"{Icon} {NativeName}";
     }
 
-    // Internal class for parsing metadata from JSON files
+    /// <summary>
+    /// Internal class for parsing language metadata from JSON files.
+    /// </summary>
     internal class LanguageMetadata
     {
         public string code { get; set; }

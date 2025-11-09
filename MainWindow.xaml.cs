@@ -12,6 +12,10 @@ using System.Text;
 
 namespace RestartIt
 {
+    /// <summary>
+    /// Main window for the RestartIt application.
+    /// Manages the UI, system tray integration, and coordinates all services.
+    /// </summary>
     public partial class MainWindow : Window
     {
         private ObservableCollection<MonitoredProgram> _programs;
@@ -24,6 +28,10 @@ namespace RestartIt
         private StringBuilder _logBuffer = new StringBuilder();
         private const int MAX_LOG_LINES = 1000;
 
+        /// <summary>
+        /// Initializes a new instance of the MainWindow.
+        /// Loads configuration, initializes services, and sets up the UI.
+        /// </summary>
         public MainWindow()
         {
             InitializeComponent();
@@ -78,6 +86,10 @@ namespace RestartIt
             }
         }
 
+        /// <summary>
+        /// Initializes the system tray icon and context menu.
+        /// Loads the icon from App.ico or generates a fallback icon.
+        /// </summary>
         private void InitializeSystemTray()
         {
             // Load tray icon from App.ico
@@ -141,6 +153,9 @@ namespace RestartIt
             }
         }
 
+        /// <summary>
+        /// Loads the application configuration from disk and populates the programs collection.
+        /// </summary>
         private void LoadConfiguration()
         {
             var config = _configManager.LoadConfiguration();
@@ -150,6 +165,10 @@ namespace RestartIt
             }
         }
 
+        /// <summary>
+        /// Saves the current application configuration to disk.
+        /// Includes all monitored programs and settings.
+        /// </summary>
         private void SaveConfiguration()
         {
             var config = new AppConfiguration
@@ -162,6 +181,12 @@ namespace RestartIt
             _configManager.SaveConfiguration(config);
         }
 
+        /// <summary>
+        /// Handles the Add Program button click event.
+        /// Opens a file dialog to select an executable, then shows the edit dialog.
+        /// </summary>
+        /// <param name="sender">The event sender</param>
+        /// <param name="e">The event arguments</param>
         private void AddProgram_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new Microsoft.Win32.OpenFileDialog
@@ -208,6 +233,12 @@ namespace RestartIt
             }
         }
 
+        /// <summary>
+        /// Handles the Edit Program button click event.
+        /// Opens the edit dialog for the selected program.
+        /// </summary>
+        /// <param name="sender">The event sender</param>
+        /// <param name="e">The event arguments</param>
         private void EditProgram_Click(object sender, RoutedEventArgs e)
         {
             if ((sender as System.Windows.Controls.Button)?.DataContext is MonitoredProgram program)
@@ -221,6 +252,12 @@ namespace RestartIt
             }
         }
 
+        /// <summary>
+        /// Handles the Settings button click event.
+        /// Opens the settings dialog and applies changes when closed.
+        /// </summary>
+        /// <param name="sender">The event sender</param>
+        /// <param name="e">The event arguments</param>
         private void Settings_Click(object sender, RoutedEventArgs e)
         {
             var settingsDialog = new SettingsDialog(
@@ -245,6 +282,12 @@ namespace RestartIt
             }
         }
 
+        /// <summary>
+        /// Handles the Export Logs button click event.
+        /// Exports both UI logs and file logs to a text file.
+        /// </summary>
+        /// <param name="sender">The event sender</param>
+        /// <param name="e">The event arguments</param>
         private void ExportLogs_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new Microsoft.Win32.SaveFileDialog
@@ -367,6 +410,12 @@ namespace RestartIt
             });
         }
 
+        /// <summary>
+        /// Handles the LanguageChanged event from LocalizationService.
+        /// Updates all UI text elements to reflect the new language.
+        /// </summary>
+        /// <param name="sender">The event sender</param>
+        /// <param name="e">The event arguments</param>
         private void OnLanguageChanged(object sender, EventArgs e)
         {
             Dispatcher.Invoke(() =>
@@ -375,6 +424,10 @@ namespace RestartIt
             });
         }
 
+        /// <summary>
+        /// Updates all UI text elements with localized strings.
+        /// Called on initialization and when the language changes.
+        /// </summary>
         private void UpdateUIText()
         {
             // Update window title
@@ -431,11 +484,23 @@ namespace RestartIt
             }
         }
 
+        /// <summary>
+        /// Logs a message using the logger service.
+        /// The message will be displayed in the UI log and written to file if enabled.
+        /// </summary>
+        /// <param name="message">The log message</param>
+        /// <param name="level">The log level</param>
         private void LogMessage(string message, LogLevel level)
         {
             _logger.Log(message, level);
         }
 
+        /// <summary>
+        /// Handles the window closing event.
+        /// Saves configuration and properly disposes resources.
+        /// </summary>
+        /// <param name="sender">The event sender</param>
+        /// <param name="e">The cancel event arguments</param>
         private void Window_Closing(object sender, CancelEventArgs e)
         {
             if (!_isClosing && _configManager.AppSettings.MinimizeToTray)

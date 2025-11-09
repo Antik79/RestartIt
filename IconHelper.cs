@@ -6,14 +6,19 @@ using System.Runtime.InteropServices;
 
 namespace RestartIt
 {
+    /// <summary>
+    /// Helper class for creating application icons programmatically.
+    /// Used as a fallback when App.ico is not available.
+    /// </summary>
     public static class IconHelper
     {
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern bool DestroyIcon(IntPtr handle);
 
         /// <summary>
-        /// Creates a persistent application icon
+        /// Creates a 32x32 application icon with a circular design.
         /// </summary>
+        /// <returns>A new Icon object for use as the application icon</returns>
         public static Icon CreateApplicationIcon()
         {
             // Create a larger bitmap for the application icon (32x32)

@@ -12,17 +12,29 @@ using System.Threading.Tasks;
 
 namespace RestartIt
 {
-    // Email Notification Service
+    /// <summary>
+    /// Service for sending email notifications via SMTP.
+    /// Handles secure password management using SecureString and DPAPI encryption.
+    /// </summary>
     public class EmailNotificationService
     {
         private readonly NotificationSettings _settings;
         private readonly object _emailLock = new object();
 
+        /// <summary>
+        /// Initializes a new instance of the EmailNotificationService with the specified settings.
+        /// </summary>
+        /// <param name="settings">The notification settings containing SMTP configuration</param>
         public EmailNotificationService(NotificationSettings settings)
         {
             _settings = settings;
         }
 
+        /// <summary>
+        /// Sends an email notification asynchronously if email notifications are enabled.
+        /// </summary>
+        /// <param name="subject">The email subject line</param>
+        /// <param name="body">The email body text</param>
         public void SendNotification(string subject, string body)
         {
             if (!_settings.EnableEmailNotifications)
@@ -31,6 +43,12 @@ namespace RestartIt
             Task.Run(() => SendEmailAsync(subject, body));
         }
 
+        /// <summary>
+        /// Sends an email asynchronously using SMTP.
+        /// Decrypts password from DPAPI to SecureString for secure handling.
+        /// </summary>
+        /// <param name="subject">The email subject line</param>
+        /// <param name="body">The email body text</param>
         private async Task SendEmailAsync(string subject, string body)
         {
             if (string.IsNullOrWhiteSpace(_settings.SmtpServer) ||
@@ -104,7 +122,10 @@ namespace RestartIt
         }
     }
 
-    // Logger Service with File Logging
+    /// <summary>
+    /// Service for logging application events with file-based logging support.
+    /// Provides automatic log rotation, cleanup of old logs, and event-based UI updates.
+    /// </summary>
     public class LoggerService : IDisposable
     {
         private LogSettings _settings;
@@ -112,14 +133,25 @@ namespace RestartIt
         private StreamWriter _logWriter;
         private string _currentLogFile;
 
+        /// <summary>
+        /// Event raised when a log message is received. Subscribers can update UI or handle logging.
+        /// </summary>
         public event EventHandler<LogEventArgs> LogMessageReceived;
 
+        /// <summary>
+        /// Initializes a new instance of the LoggerService with the specified settings.
+        /// </summary>
+        /// <param name="settings">The log settings containing file path, level, and rotation settings</param>
         public LoggerService(LogSettings settings)
         {
             _settings = settings;
             InitializeLogFile();
         }
 
+        /// <summary>
+        /// Updates the logging settings and reinitializes the log file.
+        /// </summary>
+        /// <param name="settings">The new log settings</param>
         public void UpdateSettings(LogSettings settings)
         {
             _settings = settings;
@@ -127,6 +159,10 @@ namespace RestartIt
             InitializeLogFile();
         }
 
+        /// <summary>
+        /// Initializes the log file based on current settings.
+        /// Creates the log directory if it doesn't exist and cleans up old log files.
+        /// </summary>
         private void InitializeLogFile()
         {
             if (!_settings.EnableFileLogging)
@@ -151,6 +187,9 @@ namespace RestartIt
             }
         }
 
+        /// <summary>
+        /// Removes log files older than the configured retention period.
+        /// </summary>
         private void CleanupOldLogFiles()
         {
             try
@@ -181,6 +220,10 @@ namespace RestartIt
             }
         }
 
+        /// <summary>
+        /// Checks if log rotation is needed (date changed or file size exceeded).
+        /// Rotates to a new log file if necessary.
+        /// </summary>
         private void CheckLogRotation()
         {
             if (_logWriter == null || _currentLogFile == null)
@@ -224,6 +267,13 @@ namespace RestartIt
             }
         }
 
+        /// <summary>
+        /// Logs a message with the specified log level.
+        /// Only logs if the level meets the minimum log level threshold.
+        /// Raises LogMessageReceived event and writes to file if enabled.
+        /// </summary>
+        /// <param name="message">The log message</param>
+        /// <param name="level">The log level (Debug, Info, Warning, Error)</param>
         public void Log(string message, LogLevel level)
         {
             if (level < _settings.MinimumLogLevel)
@@ -262,6 +312,10 @@ namespace RestartIt
             }
         }
 
+        /// <summary>
+        /// Closes and disposes the current log file writer.
+        /// Thread-safe operation.
+        /// </summary>
         private void CloseLogFile()
         {
             lock (_logLock)
@@ -272,13 +326,19 @@ namespace RestartIt
             }
         }
 
+        /// <summary>
+        /// Disposes the logger service and closes any open log files.
+        /// </summary>
         public void Dispose()
         {
             CloseLogFile();
         }
     }
 
-    // Process Monitor Service
+    /// <summary>
+    /// Service that monitors programs and automatically restarts them if they stop running.
+    /// Uses background tasks to monitor each program independently with configurable check intervals.
+    /// </summary>
     public class ProcessMonitorService
     {
         private readonly ObservableCollection<MonitoredProgram> _programs;
@@ -288,9 +348,22 @@ namespace RestartIt
         private NotificationSettings _notificationSettings;
         private bool _isRunning;
 
+        /// <summary>
+        /// Event raised when the monitoring service starts or stops.
+        /// </summary>
         public event EventHandler StatusChanged;
+        
+        /// <summary>
+        /// Gets a value indicating whether the monitoring service is currently running.
+        /// </summary>
         public bool IsRunning => _isRunning;
 
+        /// <summary>
+        /// Initializes a new instance of the ProcessMonitorService.
+        /// </summary>
+        /// <param name="programs">The collection of programs to monitor</param>
+        /// <param name="logger">The logger service for recording monitoring events</param>
+        /// <param name="notificationSettings">Settings for email notifications</param>
         public ProcessMonitorService(ObservableCollection<MonitoredProgram> programs,
             LoggerService logger, NotificationSettings notificationSettings)
         {
@@ -301,12 +374,21 @@ namespace RestartIt
             _monitorTasks = new Dictionary<MonitoredProgram, CancellationTokenSource>();
         }
 
+        /// <summary>
+        /// Updates the notification settings and recreates the email service.
+        /// </summary>
+        /// <param name="settings">The new notification settings</param>
         public void UpdateNotificationSettings(NotificationSettings settings)
         {
             _notificationSettings = settings;
             _emailService = new EmailNotificationService(settings);
         }
 
+        /// <summary>
+        /// Starts the monitoring service.
+        /// Subscribes to program collection changes and property changes.
+        /// Begins monitoring all enabled programs.
+        /// </summary>
         public void Start()
         {
             if (_isRunning)
@@ -328,6 +410,10 @@ namespace RestartIt
             _programs.CollectionChanged += Programs_CollectionChanged;
         }
 
+        /// <summary>
+        /// Stops the monitoring service.
+        /// Cancels all monitoring tasks and unsubscribes from events.
+        /// </summary>
         public void Stop()
         {
             if (!_isRunning)
@@ -456,6 +542,16 @@ namespace RestartIt
             }
         }
 
+        /// <summary>
+        /// Checks if the specified program is currently running.
+        /// Compares both process name and full executable path for accurate matching.
+        /// </summary>
+        /// <param name="program">The program to check</param>
+        /// <returns>True if the program is running, false otherwise</returns>
+        /// <remarks>
+        /// This method properly disposes all Process objects to prevent resource leaks.
+        /// Handles access denied exceptions gracefully when checking process details.
+        /// </remarks>
         private bool IsProcessRunning(MonitoredProgram program)
         {
             Process[] processes = null;
@@ -514,6 +610,15 @@ namespace RestartIt
             }
         }
 
+        /// <summary>
+        /// Restarts a program that has stopped running.
+        /// Validates paths and arguments before starting, and sends notifications on success/failure.
+        /// </summary>
+        /// <param name="program">The program to restart</param>
+        /// <remarks>
+        /// Performs comprehensive validation of executable path, working directory, and arguments.
+        /// Updates program status and sends email notifications based on notification settings.
+        /// </remarks>
         private void RestartProgram(MonitoredProgram program)
         {
             try

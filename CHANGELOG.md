@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2025-01-27
+
+### Added
+- Comprehensive XML documentation comments throughout the codebase
+  - Added documentation to all public classes and methods in Services.cs
+  - Added documentation to all data models and ConfigurationManager in Models.cs
+  - Added documentation to LocalizationService and language-related classes
+  - Added documentation to ProgramEditDialog and SettingsDialog in Dialogs.cs
+  - Added documentation to MainWindow and event handlers in MainWindow.xaml.cs
+  - Added documentation to IconHelper icon creation methods
+- Improved code maintainability with detailed method summaries, parameter descriptions, and remarks
+
 ## [1.3.0] - 2025-01-27
 
 ### Added
@@ -117,7 +129,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add/Edit/Remove monitored programs
 - Configuration persistence in %AppData%\RestartIt\config.json
 
-[Unreleased]: https://github.com/Antik79/RestartIt/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/Antik79/RestartIt/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/Antik79/RestartIt/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/Antik79/RestartIt/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/Antik79/RestartIt/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/Antik79/RestartIt/compare/v1.1.0...v1.2.0
