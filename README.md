@@ -1,6 +1,6 @@
 # RestartIt
 
-**Version 1.3.1** | [Download Latest Release](https://github.com/Antik79/RestartIt/releases/latest)
+**Version 1.3.2** | [Download Latest Release](https://github.com/Antik79/RestartIt/releases/latest)
 
 **RestartIt** is a Windows desktop application that monitors specified programs and automatically restarts them if they stop running. Perfect for maintaining critical applications, services, or any software that needs to stay running 24/7.
 
@@ -25,6 +25,8 @@
 
 ### User Interface
 - **Modern Enhanced UI** - Complete redesign with card-based layout, gradient buttons, and subtle shadows
+- **Customizable Theming** - Full theme support with Catppuccin presets (Latte, Frappe, Macchiato, Mocha)
+- **Appearance Settings** - Customize fonts, colors, and theme presets with live preview
 - **Clean Professional Design** - Built with WPF and custom styling (zero dependencies)
 - **Multi-Language Support** - Available in 16 languages with real-time switching
 - **Modular Language System** - Add new languages by simply dropping JSON files
@@ -273,6 +275,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 For a detailed list of changes in each version, see [CHANGELOG.md](CHANGELOG.md).
 
 ### Recent Updates
+
+**v1.3.2** (2025-01-27)
+- **Catppuccin Themes**: Added support for 4 Catppuccin theme flavors (Latte, Frappe, Macchiato, Mocha)
+- **Appearance Settings**: New tab for customizing fonts, colors, and theme presets with live preview
+- **Apply Button**: Instant preview of theme and language changes without closing Settings dialog
+- **UI Fixes**: Fixed color picker bug, improved DataGrid text visibility, and enhanced Settings dialog theming
+- **Status Badge**: Improved text contrast with white text on highlight color background
 
 **v1.3.1** (2025-01-27)
 - **Code Documentation**: Added comprehensive XML documentation comments to all public classes and methods for better code maintainability
