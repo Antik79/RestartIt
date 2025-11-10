@@ -9,20 +9,12 @@
         WindowStartupLocation="CenterScreen"
         Closing="Window_Closing"
         StateChanged="Window_StateChanged"
-        Background="#F5F5F5">
+        Background="{DynamicResource BackgroundColor}">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
-        <!-- Modern Color Palette -->
-        <SolidColorBrush x:Key="PrimaryBlue" Color="#0078D4"/>
-        <SolidColorBrush x:Key="PrimaryBlueHover" Color="#005A9E"/>
-        <SolidColorBrush x:Key="PrimaryBlueLight" Color="#E3F2FD"/>
-        <SolidColorBrush x:Key="SurfaceWhite" Color="#FFFFFF"/>
-        <SolidColorBrush x:Key="SurfaceGray" Color="#FAFAFA"/>
-        <SolidColorBrush x:Key="BorderLight" Color="#E0E0E0"/>
-        <SolidColorBrush x:Key="TextPrimary" Color="#212121"/>
-        <SolidColorBrush x:Key="TextSecondary" Color="#757575"/>
+        <!-- Status Colors (not themeable) -->
         <SolidColorBrush x:Key="SuccessGreen" Color="#28A745"/>
         <SolidColorBrush x:Key="ErrorRed" Color="#DC3545"/>
         <SolidColorBrush x:Key="WarningYellow" Color="#FFC107"/>
@@ -44,19 +36,13 @@
 
         <!-- Modern Primary Button with Gradient and Shadow -->
         <Style x:Key="ModernPrimaryButton" TargetType="Button">
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#0078D4" Offset="0"/>
-                        <GradientStop Color="#0066B8" Offset="1"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Background" Value="{DynamicResource HighlightColor}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="18,10"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontSize" Value="{DynamicResource AppFontSize}"/>
+            <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Effect" Value="{StaticResource ButtonShadow}"/>
             <Setter Property="Template">
@@ -73,14 +59,7 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background">
-                        <Setter.Value>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop Color="#005A9E" Offset="0"/>
-                                <GradientStop Color="#004A8E" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Setter.Value>
-                    </Setter>
+                    <Setter Property="Background" Value="{DynamicResource PrimaryBlueHover}"/>
                     <Setter Property="Effect">
                         <Setter.Value>
                             <DropShadowEffect Color="#50000000" 
@@ -92,27 +71,21 @@
                     </Setter>
                 </Trigger>
                 <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background">
-                        <Setter.Value>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop Color="#004A8E" Offset="0"/>
-                                <GradientStop Color="#003A7E" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Setter.Value>
-                    </Setter>
+                    <Setter Property="Background" Value="{DynamicResource PrimaryBlueHover}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
 
         <!-- Modern Secondary Button -->
         <Style x:Key="ModernSecondaryButton" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource SurfaceWhite}"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderLight}"/>
+            <Setter Property="Background" Value="{DynamicResource SurfaceColor}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextColor}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
             <Setter Property="BorderThickness" Value="1.5"/>
             <Setter Property="Padding" Value="18,10"/>
             <Setter Property="FontWeight" Value="Medium"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontSize" Value="{DynamicResource AppFontSize}"/>
+            <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -130,15 +103,15 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#F5F5F5"/>
-                    <Setter Property="BorderBrush" Value="#0078D4"/>
+                    <Setter Property="Background" Value="{DynamicResource BackgroundColor}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource HighlightColor}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
 
         <!-- Card Style -->
         <Style x:Key="CardStyle" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource SurfaceWhite}"/>
+            <Setter Property="Background" Value="{DynamicResource SurfaceColor}"/>
             <Setter Property="CornerRadius" Value="10"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="Effect" Value="{StaticResource CardShadow}"/>
@@ -148,11 +121,13 @@
         <Style x:Key="CenteredTextColumn" TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="TextAlignment" Value="Center"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextColor}"/>
+            <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}"/>
+            <Setter Property="FontSize" Value="{DynamicResource AppFontSize}"/>
         </Style>
     </Window.Resources>
 
-    <Grid Background="{StaticResource SurfaceGray}">
+    <Grid Background="{DynamicResource BackgroundColor}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -203,7 +178,7 @@
 
                 <!-- Status Badge -->
                 <Border Grid.Column="5" 
-                        Background="{StaticResource PrimaryBlueLight}"
+                        Background="{DynamicResource HighlightColor}"
                         CornerRadius="20"
                         Padding="12,6"
                         VerticalAlignment="Center">
@@ -211,7 +186,7 @@
                         <Ellipse x:Name="StatusIndicator" 
                                  Width="10" 
                                  Height="10" 
-                                 Fill="{StaticResource SuccessGreen}"
+                                 Fill="White"
                                  Margin="0,0,8,0"
                                  VerticalAlignment="Center"/>
                         <TextBlock x:Name="StatusText" 
@@ -219,7 +194,7 @@
                                    FontSize="13"
                                    FontWeight="SemiBold"
                                    VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextPrimary}"/>
+                                   Foreground="White"/>
                     </StackPanel>
                 </Border>
             </Grid>
@@ -235,22 +210,29 @@
                       SelectionMode="Single"
                       GridLinesVisibility="None"
                       HeadersVisibility="Column"
-                      Background="Transparent"
+                      Background="{DynamicResource SurfaceColor}"
                       BorderThickness="0"
                       RowHeight="52"
-                      AlternatingRowBackground="#FAFAFA">
+                      AlternatingRowBackground="{DynamicResource BackgroundColor}">
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow">
+                        <Setter Property="Background" Value="{DynamicResource SurfaceColor}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource TextColor}"/>
+                    </Style>
+                </DataGrid.RowStyle>
 
                 <DataGrid.Columns>
                     <DataGridTemplateColumn Header="Enabled" Width="90">
                         <DataGridTemplateColumn.HeaderStyle>
                             <Style TargetType="DataGridColumnHeader">
                                 <Setter Property="FontWeight" Value="SemiBold"/>
-                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="FontSize" Value="{DynamicResource AppFontSize}"/>
+                                <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}"/>
                                 <Setter Property="Padding" Value="16,12"/>
-                                <Setter Property="Background" Value="#F8F9FA"/>
-                                <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                                <Setter Property="Background" Value="{DynamicResource BackgroundColor}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextColor}"/>
                                 <Setter Property="BorderThickness" Value="0,0,0,2"/>
-                                <Setter Property="BorderBrush" Value="{StaticResource BorderLight}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
                             </Style>
                         </DataGridTemplateColumn.HeaderStyle>
                         <DataGridTemplateColumn.CellTemplate>
@@ -272,12 +254,13 @@
                         <DataGridTextColumn.HeaderStyle>
                             <Style TargetType="DataGridColumnHeader">
                                 <Setter Property="FontWeight" Value="SemiBold"/>
-                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="FontSize" Value="{DynamicResource AppFontSize}"/>
+                                <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}"/>
                                 <Setter Property="Padding" Value="16,12"/>
-                                <Setter Property="Background" Value="#F8F9FA"/>
-                                <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                                <Setter Property="Background" Value="{DynamicResource BackgroundColor}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextColor}"/>
                                 <Setter Property="BorderThickness" Value="0,0,0,2"/>
-                                <Setter Property="BorderBrush" Value="{StaticResource BorderLight}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
                             </Style>
                         </DataGridTextColumn.HeaderStyle>
                     </DataGridTextColumn>
@@ -290,12 +273,13 @@
                         <DataGridTextColumn.HeaderStyle>
                             <Style TargetType="DataGridColumnHeader">
                                 <Setter Property="FontWeight" Value="SemiBold"/>
-                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="FontSize" Value="{DynamicResource AppFontSize}"/>
+                                <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}"/>
                                 <Setter Property="Padding" Value="16,12"/>
-                                <Setter Property="Background" Value="#F8F9FA"/>
-                                <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                                <Setter Property="Background" Value="{DynamicResource BackgroundColor}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextColor}"/>
                                 <Setter Property="BorderThickness" Value="0,0,0,2"/>
-                                <Setter Property="BorderBrush" Value="{StaticResource BorderLight}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
                             </Style>
                         </DataGridTextColumn.HeaderStyle>
                     </DataGridTextColumn>
@@ -308,12 +292,13 @@
                         <DataGridTextColumn.HeaderStyle>
                             <Style TargetType="DataGridColumnHeader">
                                 <Setter Property="FontWeight" Value="SemiBold"/>
-                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="FontSize" Value="{DynamicResource AppFontSize}"/>
+                                <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}"/>
                                 <Setter Property="Padding" Value="16,12"/>
-                                <Setter Property="Background" Value="#F8F9FA"/>
-                                <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                                <Setter Property="Background" Value="{DynamicResource BackgroundColor}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextColor}"/>
                                 <Setter Property="BorderThickness" Value="0,0,0,2"/>
-                                <Setter Property="BorderBrush" Value="{StaticResource BorderLight}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
                             </Style>
                         </DataGridTextColumn.HeaderStyle>
                     </DataGridTextColumn>
@@ -326,12 +311,13 @@
                         <DataGridTextColumn.HeaderStyle>
                             <Style TargetType="DataGridColumnHeader">
                                 <Setter Property="FontWeight" Value="SemiBold"/>
-                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="FontSize" Value="{DynamicResource AppFontSize}"/>
+                                <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}"/>
                                 <Setter Property="Padding" Value="16,12"/>
-                                <Setter Property="Background" Value="#F8F9FA"/>
-                                <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                                <Setter Property="Background" Value="{DynamicResource BackgroundColor}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextColor}"/>
                                 <Setter Property="BorderThickness" Value="0,0,0,2"/>
-                                <Setter Property="BorderBrush" Value="{StaticResource BorderLight}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
                             </Style>
                         </DataGridTextColumn.HeaderStyle>
                     </DataGridTextColumn>
@@ -340,12 +326,13 @@
                         <DataGridTemplateColumn.HeaderStyle>
                             <Style TargetType="DataGridColumnHeader">
                                 <Setter Property="FontWeight" Value="SemiBold"/>
-                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="FontSize" Value="{DynamicResource AppFontSize}"/>
+                                <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}"/>
                                 <Setter Property="Padding" Value="16,12"/>
-                                <Setter Property="Background" Value="#F8F9FA"/>
-                                <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                                <Setter Property="Background" Value="{DynamicResource BackgroundColor}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextColor}"/>
                                 <Setter Property="BorderThickness" Value="0,0,0,2"/>
-                                <Setter Property="BorderBrush" Value="{StaticResource BorderLight}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
                             </Style>
                         </DataGridTemplateColumn.HeaderStyle>
                         <DataGridTemplateColumn.CellTemplate>
@@ -357,7 +344,7 @@
                                              VerticalAlignment="Center">
                                         <Ellipse.Style>
                                             <Style TargetType="Ellipse">
-                                                <Setter Property="Fill" Value="{StaticResource TextSecondary}"/>
+                                                <Setter Property="Fill" Value="{DynamicResource SecondaryTextColor}"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding Status}" Value="Running">
                                                         <Setter Property="Fill" Value="{StaticResource SuccessGreen}"/>
@@ -374,8 +361,8 @@
                                     </Ellipse>
                                     <TextBlock Text="{Binding Status}" 
                                                VerticalAlignment="Center" 
-                                               FontSize="12"
-                                               Foreground="{StaticResource TextPrimary}"/>
+                                               FontSize="{DynamicResource AppFontSize}"
+                                               Foreground="{DynamicResource TextColor}"/>
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
@@ -385,19 +372,20 @@
                         <DataGridTemplateColumn.HeaderStyle>
                             <Style TargetType="DataGridColumnHeader">
                                 <Setter Property="FontWeight" Value="SemiBold"/>
-                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="FontSize" Value="{DynamicResource AppFontSize}"/>
+                                <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}"/>
                                 <Setter Property="Padding" Value="16,12"/>
-                                <Setter Property="Background" Value="#F8F9FA"/>
-                                <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                                <Setter Property="Background" Value="{DynamicResource BackgroundColor}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextColor}"/>
                                 <Setter Property="BorderThickness" Value="0,0,0,2"/>
-                                <Setter Property="BorderBrush" Value="{StaticResource BorderLight}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
                             </Style>
                         </DataGridTemplateColumn.HeaderStyle>
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Button Content="⚙ Edit" 
                                         Padding="10,6" 
-                                        FontSize="11"
+                                        FontSize="{DynamicResource AppFontSize}"
                                         Click="EditProgram_Click"
                                         Margin="12,0">
                                     <Button.Style>
@@ -407,7 +395,7 @@
                                             <Setter Property="Padding" Value="10,6"/>
                                             <Style.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="#F0F0F0"/>
+                                                    <Setter Property="Background" Value="{DynamicResource BackgroundColor}"/>
                                                 </Trigger>
                                             </Style.Triggers>
                                         </Style>
@@ -431,16 +419,16 @@
 
                 <!-- Log Header -->
                 <Border Grid.Row="0" 
-                        Background="#F8F9FA"
+                        Background="{DynamicResource BackgroundColor}"
                         Padding="20,14"
                         CornerRadius="10,10,0,0">
                     <Grid>
                         <TextBlock x:Name="ActivityLogText" 
                                    Text="Activity Log" 
                                    FontWeight="SemiBold" 
-                                   FontSize="14"
+                                   FontSize="{DynamicResource AppFontSize}"
                                    VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextPrimary}"/>
+                                   Foreground="{DynamicResource TextColor}"/>
                         <Button x:Name="ClearLogButton" 
                                 HorizontalAlignment="Right" 
                                 Padding="12,6"
@@ -466,12 +454,12 @@
                 <ScrollViewer Grid.Row="1" 
                               VerticalScrollBarVisibility="Auto" 
                               Padding="20"
-                              Background="{StaticResource SurfaceWhite}">
+                              Background="{DynamicResource SurfaceColor}">
                     <TextBlock x:Name="LogTextBlock" 
                                FontFamily="Consolas" 
                                FontSize="11" 
                                TextWrapping="Wrap"
-                               Foreground="{StaticResource TextPrimary}"
+                               Foreground="{DynamicResource TextColor}"
                                LineHeight="20"/>
                 </ScrollViewer>
             </Grid>

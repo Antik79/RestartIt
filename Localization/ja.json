@@ -134,8 +134,7 @@
   "Settings.Title": "設定",
   "Status.Failed": "失敗",
   "Status.Restarting": "再起動中",
-  "Status.Runing": "実行中",
-  "Status.Running": "Running",
+  "Status.Running": "実行中",
   "Status.Stopped": "停止中",
   "Status.Unknown": "不明",
   "Tray.Exit": "終了",
@@ -153,5 +152,16 @@
   "Validation.PathIsDirectory": "The specified path is a directory, not a file.",
   "Validation.PathNotSupported": "The path format is not supported.",
   "Validation.PathTooLong": "The path is too long. Maximum length is 260 characters.",
-  "Validation.PathValidationError": "Error validating path: {0}"
+  "Validation.PathValidationError": "Error validating path: {0}",
+  "Settings.Appearance": "Appearance",
+  "Settings.Appearance.FontFamily": "Font Family:",
+  "Settings.Appearance.FontSize": "Font Size:",
+  "Settings.Appearance.BackgroundColor": "Background Color:",
+  "Settings.Appearance.TextColor": "Text Color:",
+  "Settings.Appearance.HighlightColor": "Highlight Color:",
+  "Settings.Appearance.BorderColor": "Border Color:",
+  "Settings.Appearance.SurfaceColor": "Surface Color:",
+  "Settings.Appearance.SecondaryTextColor": "Secondary Text Color:",
+  "Settings.Appearance.Preview": "Preview:",
+  "Settings.Appearance.ResetToDefaults": "Reset to Defaults"
 }

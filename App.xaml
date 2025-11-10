@@ -1,9 +1,35 @@
 ﻿<Application x:Class="RestartIt.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              xmlns:local="clr-namespace:RestartIt"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <!-- Theme Resources (can be overridden by ThemeService) -->
+        <FontFamily x:Key="AppFontFamily">Segoe UI</FontFamily>
+        <sys:Double x:Key="AppFontSize">12</sys:Double>
+        
+        <!-- Color Resources -->
+        <SolidColorBrush x:Key="BackgroundColor" Color="#F5F5F5"/>
+        <SolidColorBrush x:Key="TextColor" Color="#212121"/>
+        <SolidColorBrush x:Key="HighlightColor" Color="#0078D4"/>
+        <SolidColorBrush x:Key="BorderColor" Color="#E0E0E0"/>
+        <SolidColorBrush x:Key="SurfaceColor" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="SecondaryTextColor" Color="#757575"/>
+        
+        <!-- Derived/Compatibility Colors -->
+        <SolidColorBrush x:Key="PrimaryBlue" Color="#0078D4"/>
+        <SolidColorBrush x:Key="PrimaryBlueHover" Color="#005A9E"/>
+        <SolidColorBrush x:Key="PrimaryBlueLight" Color="#E3F2FD"/>
+        <SolidColorBrush x:Key="SurfaceWhite" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="SurfaceGray" Color="#FAFAFA"/>
+        <SolidColorBrush x:Key="BorderLight" Color="#E0E0E0"/>
+        <SolidColorBrush x:Key="TextPrimary" Color="#212121"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#757575"/>
+        
+        <!-- Status Colors (usually not themed) -->
+        <SolidColorBrush x:Key="SuccessGreen" Color="#28A745"/>
+        <SolidColorBrush x:Key="ErrorRed" Color="#DC3545"/>
+        <SolidColorBrush x:Key="WarningYellow" Color="#FFC107"/>
     </Application.Resources>
 </Application>

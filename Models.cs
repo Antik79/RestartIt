@@ -177,6 +177,26 @@ namespace RestartIt
         public bool StartMinimized { get; set; } = false;
         /// <summary>Gets or sets the language code (e.g., "en", "de", "fr").</summary>
         public string Language { get; set; } = "en";
+
+        // Appearance/Theming Settings
+        /// <summary>Gets or sets the font family name (e.g., "Segoe UI", "Arial").</summary>
+        public string FontFamily { get; set; } = "Segoe UI";
+        /// <summary>Gets or sets the base font size in points.</summary>
+        public double FontSize { get; set; } = 12.0;
+        /// <summary>Gets or sets the background color as a hex string (e.g., "#F5F5F5").</summary>
+        public string BackgroundColor { get; set; } = "#F5F5F5";
+        /// <summary>Gets or sets the primary text color as a hex string (e.g., "#212121").</summary>
+        public string TextColor { get; set; } = "#212121";
+        /// <summary>Gets or sets the highlight/accent color as a hex string (e.g., "#0078D4").</summary>
+        public string HighlightColor { get; set; } = "#0078D4";
+        /// <summary>Gets or sets the border color as a hex string (e.g., "#E0E0E0").</summary>
+        public string BorderColor { get; set; } = "#E0E0E0";
+        /// <summary>Gets or sets the surface/card background color as a hex string (e.g., "#FFFFFF").</summary>
+        public string SurfaceColor { get; set; } = "#FFFFFF";
+        /// <summary>Gets or sets the secondary text color as a hex string (e.g., "#757575").</summary>
+        public string SecondaryTextColor { get; set; } = "#757575";
+        /// <summary>Gets or sets the theme preset name (e.g., "Custom", "Latte", "Frappe", "Macchiato", "Mocha").</summary>
+        public string ThemePreset { get; set; } = "Custom";
     }
 
     /// <summary>

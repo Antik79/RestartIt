@@ -152,5 +152,16 @@
   "Validation.PathIsDirectory": "The specified path is a directory, not a file.",
   "Validation.PathNotSupported": "The path format is not supported.",
   "Validation.PathTooLong": "The path is too long. Maximum length is 260 characters.",
-  "Validation.PathValidationError": "Error validating path: {0}"
+  "Validation.PathValidationError": "Error validating path: {0}",
+  "Settings.Appearance": "Appearance",
+  "Settings.Appearance.FontFamily": "Font Family:",
+  "Settings.Appearance.FontSize": "Font Size:",
+  "Settings.Appearance.BackgroundColor": "Background Color:",
+  "Settings.Appearance.TextColor": "Text Color:",
+  "Settings.Appearance.HighlightColor": "Highlight Color:",
+  "Settings.Appearance.BorderColor": "Border Color:",
+  "Settings.Appearance.SurfaceColor": "Surface Color:",
+  "Settings.Appearance.SecondaryTextColor": "Secondary Text Color:",
+  "Settings.Appearance.Preview": "Preview:",
+  "Settings.Appearance.ResetToDefaults": "Reset to Defaults"
 }
