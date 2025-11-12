@@ -1,4 +1,4 @@
-# RestartIt Developer Guide
+# Developer Guide
 
 This guide provides comprehensive information for developers who want to understand, modify, or contribute to RestartIt.
 
@@ -91,7 +91,6 @@ RestartIt/
 │   ├── Dark.json
 │   └── ...
 ├── README.md                    # User documentation
-├── DEVELOPER_GUIDE.md           # This file
 ├── CHANGELOG.md                 # Version history
 └── LICENSE                      # MIT License
 ```
@@ -458,7 +457,7 @@ Themes are JSON files in `Themes/` folder:
 
 ### Creating Custom Themes
 
-See `Themes/README.md` for detailed instructions.
+See [Theming Guide](Theming-Guide) for detailed instructions.
 
 ## Configuration Management
 
