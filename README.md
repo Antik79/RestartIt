@@ -40,6 +40,8 @@
 
 ## Screenshots
 
+> **Note:** Screenshots are not currently included in this documentation. The application features a modern card-based UI with gradient buttons, shadows, and a clean professional design. You can see the interface by running the application.
+
 ### Main Window
 The main interface shows all monitored programs with their current status, check intervals, and allows easy management.
 
@@ -116,6 +118,60 @@ The compiled application will be in `bin/Release/net8.0-windows/`
 
 **Note for Gmail users:** You'll need to use an [App Password](https://support.google.com/accounts/answer/185833) instead of your regular password.
 
+### Email Notification Examples
+
+RestartIt sends email notifications with the following format:
+
+#### Successful Restart Notification
+```
+Subject: [RestartIt] RestartIt: Program Restarted - {ProgramName}
+
+Body:
+The program '{ProgramName}' has stopped running and was automatically restarted.
+
+Time: {Timestamp}
+Path: {ExecutablePath}
+
+Timestamp: {CurrentDateTime}
+
+Sent by RestartIt Application Monitor
+```
+
+#### Failed Restart Notification
+```
+Subject: [RestartIt] RestartIt: Restart Failed - {ProgramName}
+
+Body:
+The program '{ProgramName}' has stopped running but could not be restarted.
+
+Time: {Timestamp}
+Path: {ExecutablePath}
+
+Timestamp: {CurrentDateTime}
+
+Sent by RestartIt Application Monitor
+```
+
+#### Test Email
+```
+Subject: [RestartIt] Test Email from RestartIt
+
+Body:
+This is a test email to verify your email notification settings are working correctly.
+
+If you receive this email, your settings are configured properly!
+
+Timestamp: {CurrentDateTime}
+
+Sent by RestartIt Application Monitor
+```
+
+**Notification Preferences:**
+- You can choose to receive notifications on successful restarts only
+- Or on failures only
+- Or both (default)
+- Configure this in Settings → Email Notifications tab
+
 ### Configuring Logging
 
 1. Click **Settings** → **Logging** tab
@@ -125,6 +181,57 @@ The compiled application will be in `bin/Release/net8.0-windows/`
    - **Enable File Logging** - Toggle file logging on/off
    - **Max Log File Size** - Maximum size before rotation (MB)
    - **Keep Log Files For** - How many days to retain logs
+
+### Exporting Logs
+
+RestartIt allows you to export logs for analysis or sharing:
+
+1. Click the **"Export Logs"** button in the main window toolbar
+2. Choose a location and filename for the exported log file
+3. The export includes:
+   - Current day's log file (if file logging is enabled)
+   - Or UI activity log (if file logging is disabled)
+4. Exported files are saved as `.txt` or `.log` files with timestamp in filename
+
+**Export Format:**
+- Exports are saved with filename pattern: `RestartIt_Export_YYYY-MM-DD_HHmmss.txt`
+- Contains all log entries with timestamps and log levels
+- Can be opened in any text editor for analysis
+
+### Log File Format
+
+RestartIt creates log files with the following structure:
+
+**File Naming:**
+- Format: `RestartIt_YYYY-MM-DD.log`
+- Example: `RestartIt_2025-01-27.log`
+- Location: Configured in Settings → Logging tab (default: `%APPDATA%\RestartIt\logs`)
+
+**Log Entry Format:**
+```
+[YYYY-MM-DD HH:mm:ss] [LEVEL] Message
+```
+
+**Example Log Entries:**
+```
+[2025-01-27 10:30:15] [Info] Monitoring started for: My Application
+[2025-01-27 10:31:20] [Info] Program 'My Application' is running
+[2025-01-27 10:32:45] [Warning] Program 'My Application' is not running
+[2025-01-27 10:32:50] [Info] Restarting program: My Application
+[2025-01-27 10:32:52] [Info] Successfully restarted: My Application
+[2025-01-27 10:33:10] [Error] Failed to restart program: My Application - Access denied
+```
+
+**Log Levels:**
+- **Debug (0)**: Detailed diagnostic information for troubleshooting
+- **Info (1)**: General informational messages about normal operation
+- **Warning (2)**: Warning messages for potential issues
+- **Error (3)**: Error messages for failures and exceptions
+
+**Log Rotation:**
+- Logs rotate daily (new file each day)
+- Logs also rotate when file size exceeds `MaxLogFileSizeMB` setting
+- Old log files are automatically deleted after `KeepLogFilesForDays` period
 
 ### Application Settings
 
@@ -198,6 +305,61 @@ Settings are stored in `%APPDATA%\RestartIt\config.json`
 C:\Users\[YourUsername]\AppData\Roaming\RestartIt\config.json
 ```
 
+### Configuration File Structure
+
+The `config.json` file uses the following JSON structure:
+
+```json
+{
+  "Programs": [
+    {
+      "ProgramName": "My Application",
+      "ExecutablePath": "C:\\Program Files\\MyApp\\app.exe",
+      "Arguments": "--start",
+      "WorkingDirectory": "C:\\Program Files\\MyApp",
+      "CheckIntervalSeconds": 60,
+      "RestartDelaySeconds": 5,
+      "Enabled": true,
+      "Status": "Running",
+      "LastRestartTime": "2025-01-27T10:30:00"
+    }
+  ],
+  "LogSettings": {
+    "LogFilePath": "C:\\Users\\YourUsername\\AppData\\Roaming\\RestartIt\\logs",
+    "MinimumLogLevel": 1,
+    "EnableFileLogging": true,
+    "MaxLogFileSizeMB": 10,
+    "KeepLogFilesForDays": 30
+  },
+  "NotificationSettings": {
+    "EnableEmailNotifications": true,
+    "SmtpServer": "smtp.gmail.com",
+    "SmtpPort": 587,
+    "UseSSL": true,
+    "SenderEmail": "your-email@gmail.com",
+    "SenderName": "RestartIt Monitor",
+    "SenderPassword": "AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAA...",
+    "RecipientEmail": "recipient@example.com",
+    "NotifyOnRestart": true,
+    "NotifyOnFailure": true
+  },
+  "AppSettings": {
+    "StartWithWindows": false,
+    "MinimizeToTray": true,
+    "StartMinimized": false,
+    "Language": "en"
+  }
+}
+```
+
+**Configuration Notes:**
+- `MinimumLogLevel`: 0=Debug, 1=Info, 2=Warning, 3=Error
+- `SenderPassword`: Encrypted using Windows DPAPI (shown as Base64 string)
+- `LastRestartTime`: ISO 8601 format timestamp or null
+- `Status`: One of "Running", "Stopped", "Restarting", "Failed"
+- The configuration file is automatically created and managed by RestartIt
+- Manual editing is possible but not recommended - use the UI instead
+
 ### Security Note
 Email passwords are encrypted using Windows Data Protection API (DPAPI) and can only be decrypted by the same Windows user account that encrypted them.
 
@@ -225,6 +387,91 @@ RestartIt is ideal for:
 - Monitored programs must be executables (.exe files)
 - Email notifications require SMTP server access
 - Cannot monitor Windows services (use Windows Service Manager for that)
+
+## Frequently Asked Questions (FAQ)
+
+### General Questions
+
+**Q: Can RestartIt monitor Windows services?**  
+A: No, RestartIt only monitors executable (.exe) files. For Windows services, use the built-in Windows Service Manager or other service monitoring tools.
+
+**Q: Does RestartIt work on Windows 7 or earlier?**  
+A: No, RestartIt requires Windows 10 or later and .NET 8.0 Runtime.
+
+**Q: Can I monitor programs on remote computers?**  
+A: RestartIt runs locally and can only monitor programs on the same computer where it's installed. For remote monitoring, you would need to install RestartIt on each remote computer.
+
+**Q: How many programs can I monitor at once?**  
+A: There's no hard limit, but performance may degrade with a very large number of programs. Monitor only what you need to keep resource usage reasonable.
+
+### Configuration Questions
+
+**Q: Where are my settings stored?**  
+A: Settings are stored in `%APPDATA%\RestartIt\config.json`. This is typically `C:\Users\[YourUsername]\AppData\Roaming\RestartIt\config.json`.
+
+**Q: Can I backup my configuration?**  
+A: Yes, simply copy the `config.json` file. Note that encrypted passwords are tied to your Windows user account and won't work on other computers.
+
+**Q: How do I reset all settings?**  
+A: Close RestartIt, delete or rename the `config.json` file, then restart the application. It will create a new default configuration.
+
+**Q: Can I edit the config.json file directly?**  
+A: Yes, but it's not recommended. Use the UI instead to avoid configuration errors. If you do edit manually, ensure the JSON is valid and restart the application.
+
+### Email Notifications
+
+**Q: Why aren't I receiving email notifications?**  
+A: Check the following:
+- Email notifications are enabled in Settings
+- SMTP settings are correct (server, port, SSL/TLS)
+- For Gmail, you're using an App Password, not your regular password
+- Firewall isn't blocking SMTP ports (587 for TLS, 465 for SSL)
+- Test email functionality works (use "Send Test Email" button)
+
+**Q: Can I use multiple recipient email addresses?**  
+A: Currently, RestartIt supports only one recipient email address. You can use email aliases or forwarding rules to send to multiple addresses.
+
+**Q: Are my email passwords secure?**  
+A: Yes, passwords are encrypted using Windows DPAPI (Data Protection API) and can only be decrypted by the same Windows user account that encrypted them.
+
+### Logging Questions
+
+**Q: Where are log files stored?**  
+A: By default, logs are stored in `%APPDATA%\RestartIt\logs`. You can change this in Settings → Logging tab.
+
+**Q: How long are logs kept?**  
+A: By default, logs are kept for 30 days. You can configure this in Settings → Logging tab under "Keep Log Files For".
+
+**Q: Can I view logs in real-time?**  
+A: Yes, the main window displays a real-time activity log. You can also open log files directly in a text editor.
+
+**Q: What's the difference between UI logs and file logs?**  
+A: UI logs show recent activity in the application window (bounded buffer to prevent memory issues). File logs are persistent and stored on disk with full history.
+
+### Performance Questions
+
+**Q: Does RestartIt use a lot of system resources?**  
+A: RestartIt is lightweight and uses minimal resources. CPU usage depends on the number of monitored programs and check intervals. Typical usage is less than 1% CPU and a few MB of RAM.
+
+**Q: What if I have high CPU usage?**  
+A: Try the following:
+- Increase check intervals for monitored programs (check less frequently)
+- Reduce the number of monitored programs
+- Check if any programs are restarting repeatedly (indicates a problem with the monitored program)
+
+**Q: Can I pause monitoring temporarily?**  
+A: Yes, you can disable individual programs using the checkbox in the main window, or disable all monitoring by closing the application.
+
+### Language Support
+
+**Q: How do I add a new language?**  
+A: Create a JSON file in the `Localization` folder following the format of existing language files. See the "Adding a New Language" section above for details.
+
+**Q: Are all features translated?**  
+A: Yes, all UI elements, dialogs, buttons, and log messages are fully localized in all 16 supported languages.
+
+**Q: Can I contribute translations?**  
+A: Yes! Please submit pull requests with new language files or improvements to existing translations.
 
 ## Troubleshooting
 
@@ -256,7 +503,104 @@ This warning appears because RestartIt is not code-signed. The application is sa
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit pull requests or open issues for bugs and feature requests.
+Contributions are welcome! We appreciate your help in making RestartIt better.
+
+### How to Contribute
+
+1. **Fork the repository** on GitHub
+2. **Create a feature branch** from `main`:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+3. **Make your changes** following the coding standards below
+4. **Test your changes** thoroughly
+5. **Commit your changes** with clear, descriptive commit messages
+6. **Push to your fork** and create a Pull Request
+
+### Coding Standards
+
+- **Code Style**: Follow existing code style and conventions
+- **Documentation**: Add XML documentation comments to public classes and methods
+- **Localization**: All user-facing strings must use the localization system (no hardcoded text)
+- **Testing**: Test your changes on Windows 10/11 with .NET 8.0
+- **Commits**: Write clear, descriptive commit messages
+
+### Areas for Contribution
+
+- **Translations**: Add new languages or improve existing translations
+- **Bug Fixes**: Fix issues reported in the Issues section
+- **Features**: Implement requested features (check existing issues first)
+- **Documentation**: Improve README, code comments, or add examples
+- **UI/UX**: Enhance the user interface or user experience
+
+### Translation Contributions
+
+To contribute a new language:
+
+1. Copy an existing language file (e.g., `en.json`) from the `Localization` folder
+2. Rename it to your language code (e.g., `pt.json` for Portuguese)
+3. Update the `_metadata` section with your language information
+4. Translate all the string values (keep the keys unchanged)
+5. Test the translation in the application
+6. Submit a pull request
+
+**Translation Keys:**
+- All keys starting with `App.*` are application-wide strings
+- Keys starting with `Settings.*` are settings dialog strings
+- Keys starting with `Log.*` are log messages
+- Keys starting with `Email.*` are email notification strings
+- Keys starting with `Validation.*` are validation error messages
+
+### Reporting Issues
+
+When reporting bugs or requesting features:
+
+- **Use the issue templates** if available
+- **Provide clear descriptions** of the problem or feature request
+- **Include steps to reproduce** for bugs
+- **Specify your environment** (Windows version, .NET version)
+- **Check existing issues** to avoid duplicates
+
+### Development Setup
+
+1. **Prerequisites:**
+   - Windows 10 or later
+   - .NET 8.0 SDK
+   - Visual Studio 2022 or Visual Studio Code
+
+2. **Clone and Build:**
+   ```bash
+   git clone https://github.com/Antik79/RestartIt.git
+   cd RestartIt
+   dotnet restore
+   dotnet build
+   ```
+
+3. **Run:**
+   ```bash
+   dotnet run --project RestartIt.csproj
+   ```
+
+### Code Structure
+
+- **Models.cs**: Data models and configuration management
+- **Services.cs**: Core services (monitoring, logging, email notifications)
+- **MainWindow.xaml/cs**: Main application window
+- **Dialogs.cs**: Settings and program edit dialogs
+- **LocalizationService.cs**: Language and localization management
+- **CredentialManager.cs**: Password encryption/decryption
+- **PathValidator.cs**: File path validation utilities
+- **IconHelper.cs**: Icon creation utilities
+
+### Pull Request Guidelines
+
+- **Keep PRs focused**: One feature or fix per pull request
+- **Write clear descriptions**: Explain what and why, not just what
+- **Reference issues**: Link to related issues if applicable
+- **Update documentation**: Update README if needed
+- **Test thoroughly**: Ensure your changes don't break existing functionality
+
+Thank you for contributing to RestartIt! 🎉
 
 ## License
 
