@@ -3,6 +3,7 @@ using System.IO;
 using System.Security;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using Forms = System.Windows.Forms;
 
 namespace RestartIt
@@ -322,13 +323,23 @@ namespace RestartIt
         private string _originalEncryptedPassword; // Store original encrypted password
 
         // UI elements for localization
-        private TabItem _loggingTab, _emailTab, _appTab, _aboutTab;
-        private Button _okButton, _cancelButton, _browseFolderButton, _testEmailButton;
+        private TabItem _loggingTab, _emailTab, _appTab, _appearanceTab, _aboutTab;
+        private Button _okButton, _cancelButton, _applyButton, _browseFolderButton, _testEmailButton;
         private TextBlock _logPathLabel, _minLogLevelLabel, _maxLogSizeLabel, _keepLogsDaysLabel;
         private TextBlock _smtpServerLabel, _smtpPortLabel, _senderEmailLabel, _senderNameLabel;
         private TextBlock _senderPasswordLabel, _recipientEmailLabel, _languageLabel;
         private TextBlock _startWithWindowsDesc, _minimizeToTrayDesc, _startMinimizedDesc;
         private TextBlock _aboutDescription, _aboutGithubHeader, _aboutCopyright, _aboutTechStack, _aboutVersionText;
+        
+        // Appearance tab UI elements
+        private ComboBox _themePresetComboBox;
+        private ComboBox _fontFamilyComboBox;
+        private Slider _fontSizeSlider;
+        private TextBlock _fontSizeValueText;
+        private Button _backgroundColorButton, _textColorButton, _highlightColorButton;
+        private Button _borderColorButton, _surfaceColorButton, _secondaryTextColorButton;
+        private Border _previewPanel;
+        private TextBlock _previewText;
 
         /// <summary>
         /// Initializes a new instance of the SettingsDialog with the current settings.
@@ -369,7 +380,15 @@ namespace RestartIt
                 StartWithWindows = appSettings.StartWithWindows,
                 MinimizeToTray = appSettings.MinimizeToTray,
                 StartMinimized = appSettings.StartMinimized,
-                Language = appSettings.Language
+                Language = appSettings.Language,
+                FontFamily = appSettings.FontFamily ?? "Segoe UI",
+                FontSize = appSettings.FontSize > 0 ? appSettings.FontSize : 12.0,
+                BackgroundColor = appSettings.BackgroundColor ?? "#F5F5F5",
+                TextColor = appSettings.TextColor ?? "#212121",
+                HighlightColor = appSettings.HighlightColor ?? "#0078D4",
+                BorderColor = appSettings.BorderColor ?? "#E0E0E0",
+                SurfaceColor = appSettings.SurfaceColor ?? "#FFFFFF",
+                SecondaryTextColor = appSettings.SecondaryTextColor ?? "#757575"
             };
 
             InitializeDialog();
@@ -382,31 +401,68 @@ namespace RestartIt
             Height = 550;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
             ResizeMode = ResizeMode.NoResize;
+            
+            // Apply theme to window
+            Background = (System.Windows.Media.Brush)Application.Current.Resources["BackgroundColor"];
 
             var mainGrid = new Grid { Margin = new Thickness(10) };
             mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
             mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-            var tabControl = new TabControl();
+            var tabControl = new TabControl
+            {
+                Background = (System.Windows.Media.Brush)Application.Current.Resources["BackgroundColor"],
+                BorderBrush = (System.Windows.Media.Brush)Application.Current.Resources["BorderColor"]
+            };
+
+            // Helper method to create styled TabItem
+            TabItem CreateStyledTabItem(string header, UIElement content)
+            {
+                var tabItem = new TabItem
+                {
+                    Header = header,
+                    Content = content,
+                    Background = (System.Windows.Media.Brush)Application.Current.Resources["BackgroundColor"],
+                    Foreground = (System.Windows.Media.Brush)Application.Current.Resources["TextColor"],
+                    FontFamily = (System.Windows.Media.FontFamily)Application.Current.Resources["AppFontFamily"],
+                    FontSize = (double)Application.Current.Resources["AppFontSize"]
+                };
+                
+                // Style for selected tab
+                var style = new Style(typeof(TabItem));
+                style.Setters.Add(new Setter(TabItem.BackgroundProperty, (System.Windows.Media.Brush)Application.Current.Resources["SurfaceColor"]));
+                style.Setters.Add(new Setter(TabItem.ForegroundProperty, (System.Windows.Media.Brush)Application.Current.Resources["TextColor"]));
+                
+                var selectedTrigger = new Trigger { Property = TabItem.IsSelectedProperty, Value = true };
+                selectedTrigger.Setters.Add(new Setter(TabItem.BackgroundProperty, (System.Windows.Media.Brush)Application.Current.Resources["SurfaceColor"]));
+                style.Triggers.Add(selectedTrigger);
+                
+                var mouseOverTrigger = new Trigger { Property = UIElement.IsMouseOverProperty, Value = true };
+                mouseOverTrigger.Setters.Add(new Setter(TabItem.BackgroundProperty, (System.Windows.Media.Brush)Application.Current.Resources["BackgroundColor"]));
+                style.Triggers.Add(mouseOverTrigger);
+                
+                tabItem.Style = style;
+                return tabItem;
+            }
 
             // Logging Tab
-            _loggingTab = new TabItem { Header = LocalizationService.Instance.GetString("Settings.Logging", "Logging") };
-            _loggingTab.Content = CreateLoggingTab();
+            _loggingTab = CreateStyledTabItem(LocalizationService.Instance.GetString("Settings.Logging", "Logging"), CreateLoggingTab());
             tabControl.Items.Add(_loggingTab);
 
             // Email Notifications Tab
-            _emailTab = new TabItem { Header = LocalizationService.Instance.GetString("Settings.EmailNotifications", "Email Notifications") };
-            _emailTab.Content = CreateEmailTab();
+            _emailTab = CreateStyledTabItem(LocalizationService.Instance.GetString("Settings.EmailNotifications", "Email Notifications"), CreateEmailTab());
             tabControl.Items.Add(_emailTab);
 
             // Application Tab
-            _appTab = new TabItem { Header = LocalizationService.Instance.GetString("Settings.Application", "Application") };
-            _appTab.Content = CreateAppTab();
+            _appTab = CreateStyledTabItem(LocalizationService.Instance.GetString("Settings.Application", "Application"), CreateAppTab());
             tabControl.Items.Add(_appTab);
 
+            // Appearance Tab
+            _appearanceTab = CreateStyledTabItem(LocalizationService.Instance.GetString("Settings.Appearance", "Appearance"), CreateAppearanceTab());
+            tabControl.Items.Add(_appearanceTab);
+
             // About Tab
-            _aboutTab = new TabItem { Header = LocalizationService.Instance.GetString("Settings.About", "About") };
-            _aboutTab.Content = CreateAboutTab();
+            _aboutTab = CreateStyledTabItem(LocalizationService.Instance.GetString("Settings.About", "About"), CreateAboutTab());
             tabControl.Items.Add(_aboutTab);
 
             Grid.SetRow(tabControl, 0);
@@ -421,25 +477,54 @@ namespace RestartIt
             };
             Grid.SetRow(buttonPanel, 1);
 
-            _okButton = new Button
+            // Helper method to create styled button
+            Button CreateStyledButton(string content, bool isDefault = false, bool isCancel = false)
             {
-                Content = LocalizationService.Instance.GetString("Dialog.OK", "OK"),
-                Width = 80,
-                Height = 30,
-                Margin = new Thickness(0, 0, 10, 0),
-                IsDefault = true
-            };
+                var button = new Button
+                {
+                    Content = content,
+                    Width = 80,
+                    Height = 30,
+                    Margin = new Thickness(0, 0, 10, 0),
+                    IsDefault = isDefault,
+                    IsCancel = isCancel,
+                    Background = (System.Windows.Media.Brush)Application.Current.Resources["HighlightColor"],
+                    Foreground = System.Windows.Media.Brushes.White,
+                    FontFamily = (System.Windows.Media.FontFamily)Application.Current.Resources["AppFontFamily"],
+                    FontSize = (double)Application.Current.Resources["AppFontSize"],
+                    BorderThickness = new Thickness(0),
+                    Padding = new Thickness(10, 5, 10, 5),
+                    Cursor = System.Windows.Input.Cursors.Hand
+                };
+                
+                // Hover effect
+                var style = new Style(typeof(Button));
+                var mouseOverTrigger = new Trigger { Property = UIElement.IsMouseOverProperty, Value = true };
+                var darkerBrush = new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Color.FromRgb(
+                        (byte)(((System.Windows.Media.SolidColorBrush)Application.Current.Resources["HighlightColor"]).Color.R * 0.8),
+                        (byte)(((System.Windows.Media.SolidColorBrush)Application.Current.Resources["HighlightColor"]).Color.G * 0.8),
+                        (byte)(((System.Windows.Media.SolidColorBrush)Application.Current.Resources["HighlightColor"]).Color.B * 0.8)
+                    ));
+                mouseOverTrigger.Setters.Add(new Setter(Button.BackgroundProperty, darkerBrush));
+                style.Triggers.Add(mouseOverTrigger);
+                
+                button.Style = style;
+                return button;
+            }
+
+            _okButton = CreateStyledButton(LocalizationService.Instance.GetString("Dialog.OK", "OK"), isDefault: true);
             _okButton.Click += OkButton_Click;
 
-            _cancelButton = new Button
-            {
-                Content = LocalizationService.Instance.GetString("Dialog.Cancel", "Cancel"),
-                Width = 80,
-                Height = 30,
-                IsCancel = true
-            };
+            _applyButton = CreateStyledButton(LocalizationService.Instance.GetString("Dialog.Apply", "Apply"));
+            _applyButton.Click += ApplyButton_Click;
+
+            _cancelButton = CreateStyledButton(LocalizationService.Instance.GetString("Dialog.Cancel", "Cancel"), isCancel: true);
+            _cancelButton.Background = (System.Windows.Media.Brush)Application.Current.Resources["BorderColor"];
+            _cancelButton.Foreground = (System.Windows.Media.Brush)Application.Current.Resources["TextColor"];
 
             buttonPanel.Children.Add(_okButton);
+            buttonPanel.Children.Add(_applyButton);
             buttonPanel.Children.Add(_cancelButton);
             mainGrid.Children.Add(buttonPanel);
 
@@ -451,7 +536,11 @@ namespace RestartIt
 
         private ScrollViewer CreateLoggingTab()
         {
-            var grid = new Grid { Margin = new Thickness(20) };
+            var grid = new Grid 
+            { 
+                Margin = new Thickness(20),
+                Background = (System.Windows.Media.Brush)Application.Current.Resources["SurfaceColor"]
+            };
             for (int i = 0; i < 6; i++)
                 grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
@@ -525,12 +614,21 @@ namespace RestartIt
             Grid.SetRow(_keepLogsDaysTextBox, row++);
             grid.Children.Add(_keepLogsDaysTextBox);
 
-            return new ScrollViewer { Content = grid, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+            return new ScrollViewer 
+            { 
+                Content = grid, 
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                Background = (System.Windows.Media.Brush)Application.Current.Resources["SurfaceColor"]
+            };
         }
 
         private ScrollViewer CreateEmailTab()
         {
-            var grid = new Grid { Margin = new Thickness(20) };
+            var grid = new Grid 
+            { 
+                Margin = new Thickness(20),
+                Background = (System.Windows.Media.Brush)Application.Current.Resources["SurfaceColor"]
+            };
             for (int i = 0; i < 12; i++)
                 grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
@@ -623,7 +721,12 @@ namespace RestartIt
             Grid.SetRow(_testEmailButton, row++);
             grid.Children.Add(_testEmailButton);
 
-            return new ScrollViewer { Content = grid, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+            return new ScrollViewer 
+            { 
+                Content = grid, 
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                Background = (System.Windows.Media.Brush)Application.Current.Resources["SurfaceColor"]
+            };
         }
 
         /// <summary>
@@ -853,7 +956,407 @@ namespace RestartIt
             Grid.SetRow(_languageComboBox, row++);
             grid.Children.Add(_languageComboBox);
 
-            return new ScrollViewer { Content = grid, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+            return new ScrollViewer 
+            { 
+                Content = grid, 
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                Background = (System.Windows.Media.Brush)Application.Current.Resources["SurfaceColor"]
+            };
+        }
+
+        private ScrollViewer CreateAppearanceTab()
+        {
+            var grid = new Grid 
+            { 
+                Margin = new Thickness(20),
+                Background = (System.Windows.Media.Brush)Application.Current.Resources["SurfaceColor"]
+            };
+            for (int i = 0; i < 13; i++)
+                grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+
+            int row = 0;
+
+            // Theme Presets
+            AddLabel(grid, LocalizationService.Instance.GetString("Settings.Appearance.ThemePreset", "Theme Preset:"), row);
+            _themePresetComboBox = new ComboBox
+            {
+                Margin = new Thickness(0, 20, 0, 15)
+            };
+            
+            // Populate with theme options
+            _themePresetComboBox.Items.Add("Custom");
+            _themePresetComboBox.Items.Add("Latte");
+            _themePresetComboBox.Items.Add("Frappe");
+            _themePresetComboBox.Items.Add("Macchiato");
+            _themePresetComboBox.Items.Add("Mocha");
+            
+            // Select current preset or default to Custom
+            var currentPreset = AppSettings.ThemePreset ?? "Custom";
+            _themePresetComboBox.SelectedItem = currentPreset;
+            
+            _themePresetComboBox.SelectionChanged += (s, e) =>
+            {
+                if (_themePresetComboBox.SelectedItem != null)
+                {
+                    var selectedPreset = _themePresetComboBox.SelectedItem.ToString();
+                    AppSettings.ThemePreset = selectedPreset;
+                    
+                    if (selectedPreset != "Custom")
+                    {
+                        // Apply Catppuccin theme
+                        var theme = CatppuccinThemes.GetTheme(selectedPreset);
+                        if (theme != null)
+                        {
+                            theme.ApplyToAppSettings(AppSettings);
+                            UpdateColorButtons();
+                            UpdatePreview();
+                        }
+                    }
+                }
+            };
+            Grid.SetRow(_themePresetComboBox, row++);
+            grid.Children.Add(_themePresetComboBox);
+
+            // Font Family
+            AddLabel(grid, LocalizationService.Instance.GetString("Settings.Appearance.FontFamily", "Font Family:"), row);
+            _fontFamilyComboBox = new ComboBox
+            {
+                Margin = new Thickness(0, 20, 0, 15),
+                SelectedValuePath = "Name"
+            };
+            
+            // Populate with common system fonts
+            var commonFonts = new[] { "Segoe UI", "Arial", "Calibri", "Consolas", "Courier New", 
+                "Georgia", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana" };
+            foreach (var font in commonFonts)
+            {
+                _fontFamilyComboBox.Items.Add(font);
+            }
+            _fontFamilyComboBox.SelectedItem = AppSettings.FontFamily;
+            _fontFamilyComboBox.SelectionChanged += (s, e) =>
+            {
+                if (_fontFamilyComboBox.SelectedItem != null)
+                {
+                    AppSettings.FontFamily = _fontFamilyComboBox.SelectedItem.ToString();
+                    UpdatePreview();
+                }
+            };
+            Grid.SetRow(_fontFamilyComboBox, row++);
+            grid.Children.Add(_fontFamilyComboBox);
+
+            // Font Size
+            AddLabel(grid, LocalizationService.Instance.GetString("Settings.Appearance.FontSize", "Font Size:"), row);
+            var fontSizePanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(0, 20, 0, 15)
+            };
+            _fontSizeSlider = new Slider
+            {
+                Minimum = 8,
+                Maximum = 24,
+                Value = AppSettings.FontSize,
+                Width = 200,
+                TickFrequency = 1,
+                IsSnapToTickEnabled = true
+            };
+            _fontSizeSlider.ValueChanged += (s, e) =>
+            {
+                AppSettings.FontSize = _fontSizeSlider.Value;
+                _fontSizeValueText.Text = ((int)_fontSizeSlider.Value).ToString();
+                UpdatePreview();
+            };
+            _fontSizeValueText = new TextBlock
+            {
+                Text = ((int)AppSettings.FontSize).ToString(),
+                Margin = new Thickness(10, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+                MinWidth = 30
+            };
+            fontSizePanel.Children.Add(_fontSizeSlider);
+            fontSizePanel.Children.Add(_fontSizeValueText);
+            Grid.SetRow(fontSizePanel, row++);
+            grid.Children.Add(fontSizePanel);
+
+            // Background Color
+            AddLabel(grid, LocalizationService.Instance.GetString("Settings.Appearance.BackgroundColor", "Background Color:"), row);
+            _backgroundColorButton = CreateColorPickerButton(AppSettings.BackgroundColor, () => UpdatePreview());
+            Grid.SetRow(_backgroundColorButton, row++);
+            grid.Children.Add(_backgroundColorButton);
+
+            // Text Color
+            AddLabel(grid, LocalizationService.Instance.GetString("Settings.Appearance.TextColor", "Text Color:"), row);
+            _textColorButton = CreateColorPickerButton(AppSettings.TextColor, () => UpdatePreview());
+            Grid.SetRow(_textColorButton, row++);
+            grid.Children.Add(_textColorButton);
+
+            // Highlight Color
+            AddLabel(grid, LocalizationService.Instance.GetString("Settings.Appearance.HighlightColor", "Highlight Color:"), row);
+            _highlightColorButton = CreateColorPickerButton(AppSettings.HighlightColor, () => UpdatePreview());
+            Grid.SetRow(_highlightColorButton, row++);
+            grid.Children.Add(_highlightColorButton);
+
+            // Border Color
+            AddLabel(grid, LocalizationService.Instance.GetString("Settings.Appearance.BorderColor", "Border Color:"), row);
+            _borderColorButton = CreateColorPickerButton(AppSettings.BorderColor, () => UpdatePreview());
+            Grid.SetRow(_borderColorButton, row++);
+            grid.Children.Add(_borderColorButton);
+
+            // Surface Color
+            AddLabel(grid, LocalizationService.Instance.GetString("Settings.Appearance.SurfaceColor", "Surface Color:"), row);
+            _surfaceColorButton = CreateColorPickerButton(AppSettings.SurfaceColor, () => UpdatePreview());
+            Grid.SetRow(_surfaceColorButton, row++);
+            grid.Children.Add(_surfaceColorButton);
+
+            // Secondary Text Color
+            AddLabel(grid, LocalizationService.Instance.GetString("Settings.Appearance.SecondaryTextColor", "Secondary Text Color:"), row);
+            _secondaryTextColorButton = CreateColorPickerButton(AppSettings.SecondaryTextColor, () => UpdatePreview());
+            Grid.SetRow(_secondaryTextColorButton, row++);
+            grid.Children.Add(_secondaryTextColorButton);
+
+            // Reset to Defaults Button
+            var resetButton = new Button
+            {
+                Content = LocalizationService.Instance.GetString("Settings.Appearance.ResetToDefaults", "Reset to Defaults"),
+                Width = 150,
+                Height = 30,
+                Margin = new Thickness(0, 20, 0, 15),
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
+            resetButton.Click += (s, e) =>
+            {
+                var defaults = new AppSettings();
+                AppSettings.FontFamily = defaults.FontFamily;
+                AppSettings.FontSize = defaults.FontSize;
+                AppSettings.BackgroundColor = defaults.BackgroundColor;
+                AppSettings.TextColor = defaults.TextColor;
+                AppSettings.HighlightColor = defaults.HighlightColor;
+                AppSettings.BorderColor = defaults.BorderColor;
+                AppSettings.SurfaceColor = defaults.SurfaceColor;
+                AppSettings.SecondaryTextColor = defaults.SecondaryTextColor;
+                AppSettings.ThemePreset = defaults.ThemePreset;
+                
+                _themePresetComboBox.SelectedItem = AppSettings.ThemePreset;
+                _fontFamilyComboBox.SelectedItem = AppSettings.FontFamily;
+                _fontSizeSlider.Value = AppSettings.FontSize;
+                UpdateColorButtons();
+                UpdatePreview();
+            };
+            Grid.SetRow(resetButton, row++);
+            grid.Children.Add(resetButton);
+
+            // Preview Section
+            var previewLabel = new TextBlock
+            {
+                Text = LocalizationService.Instance.GetString("Settings.Appearance.Preview", "Preview:"),
+                FontWeight = FontWeights.SemiBold,
+                Margin = new Thickness(0, 20, 0, 10)
+            };
+            Grid.SetRow(previewLabel, row++);
+            grid.Children.Add(previewLabel);
+
+            _previewPanel = new Border
+            {
+                Background = CreateBrush(AppSettings.BackgroundColor),
+                BorderBrush = CreateBrush(AppSettings.BorderColor),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(5),
+                Padding = new Thickness(15),
+                Margin = new Thickness(0, 0, 0, 0)
+            };
+            _previewText = new TextBlock
+            {
+                Text = "Sample Text - This is how your application will look",
+                Foreground = CreateBrush(AppSettings.TextColor),
+                FontFamily = new FontFamily(AppSettings.FontFamily),
+                FontSize = AppSettings.FontSize
+            };
+            _previewPanel.Child = _previewText;
+            Grid.SetRow(_previewPanel, row++);
+            grid.Children.Add(_previewPanel);
+
+            return new ScrollViewer 
+            { 
+                Content = grid, 
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                Background = (System.Windows.Media.Brush)Application.Current.Resources["SurfaceColor"]
+            };
+        }
+
+        private Button CreateColorPickerButton(string initialColor, Action onColorChanged)
+        {
+            var button = new Button
+            {
+                Width = 150,
+                Height = 30,
+                Margin = new Thickness(0, 20, 0, 15),
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
+
+            var colorPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal
+            };
+            var colorBox = new Border
+            {
+                Width = 20,
+                Height = 20,
+                Background = CreateBrush(initialColor),
+                BorderBrush = System.Windows.Media.Brushes.Gray,
+                BorderThickness = new Thickness(1),
+                Margin = new Thickness(0, 0, 8, 0),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            var textBlock = new TextBlock
+            {
+                Text = initialColor,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            colorPanel.Children.Add(colorBox);
+            colorPanel.Children.Add(textBlock);
+            button.Content = colorPanel;
+
+            button.Click += (s, e) =>
+            {
+                try
+                {
+                    var currentColor = button == _backgroundColorButton ? AppSettings.BackgroundColor :
+                                      button == _textColorButton ? AppSettings.TextColor :
+                                      button == _highlightColorButton ? AppSettings.HighlightColor :
+                                      button == _borderColorButton ? AppSettings.BorderColor :
+                                      button == _surfaceColorButton ? AppSettings.SurfaceColor :
+                                      AppSettings.SecondaryTextColor;
+
+                    var colorDialog = new Forms.ColorDialog
+                    {
+                        Color = System.Drawing.ColorTranslator.FromHtml(currentColor),
+                        FullOpen = true
+                    };
+
+                    if (colorDialog.ShowDialog() == Forms.DialogResult.OK)
+                    {
+                        // Convert color to hex format manually to avoid named colors
+                        var color = colorDialog.Color;
+                        var newColor = $"#{color.R:X2}{color.G:X2}{color.B:X2}";
+                        
+                        // Update AppSettings
+                        if (button == _backgroundColorButton)
+                            AppSettings.BackgroundColor = newColor;
+                        else if (button == _textColorButton)
+                            AppSettings.TextColor = newColor;
+                        else if (button == _highlightColorButton)
+                            AppSettings.HighlightColor = newColor;
+                        else if (button == _borderColorButton)
+                            AppSettings.BorderColor = newColor;
+                        else if (button == _surfaceColorButton)
+                            AppSettings.SurfaceColor = newColor;
+                        else if (button == _secondaryTextColorButton)
+                            AppSettings.SecondaryTextColor = newColor;
+                        
+                        // Update button display
+                        colorBox.Background = CreateBrush(newColor);
+                        textBlock.Text = newColor;
+                        
+                        onColorChanged?.Invoke();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error selecting color: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            };
+
+            return button;
+        }
+
+        private void UpdateColorButtons()
+        {
+            if (_backgroundColorButton != null)
+            {
+                var panel = _backgroundColorButton.Content as StackPanel;
+                if (panel != null && panel.Children.Count >= 2)
+                {
+                    (panel.Children[0] as Border).Background = CreateBrush(AppSettings.BackgroundColor);
+                    (panel.Children[1] as TextBlock).Text = AppSettings.BackgroundColor;
+                }
+            }
+            if (_textColorButton != null)
+            {
+                var panel = _textColorButton.Content as StackPanel;
+                if (panel != null && panel.Children.Count >= 2)
+                {
+                    (panel.Children[0] as Border).Background = CreateBrush(AppSettings.TextColor);
+                    (panel.Children[1] as TextBlock).Text = AppSettings.TextColor;
+                }
+            }
+            if (_highlightColorButton != null)
+            {
+                var panel = _highlightColorButton.Content as StackPanel;
+                if (panel != null && panel.Children.Count >= 2)
+                {
+                    (panel.Children[0] as Border).Background = CreateBrush(AppSettings.HighlightColor);
+                    (panel.Children[1] as TextBlock).Text = AppSettings.HighlightColor;
+                }
+            }
+            if (_borderColorButton != null)
+            {
+                var panel = _borderColorButton.Content as StackPanel;
+                if (panel != null && panel.Children.Count >= 2)
+                {
+                    (panel.Children[0] as Border).Background = CreateBrush(AppSettings.BorderColor);
+                    (panel.Children[1] as TextBlock).Text = AppSettings.BorderColor;
+                }
+            }
+            if (_surfaceColorButton != null)
+            {
+                var panel = _surfaceColorButton.Content as StackPanel;
+                if (panel != null && panel.Children.Count >= 2)
+                {
+                    (panel.Children[0] as Border).Background = CreateBrush(AppSettings.SurfaceColor);
+                    (panel.Children[1] as TextBlock).Text = AppSettings.SurfaceColor;
+                }
+            }
+            if (_secondaryTextColorButton != null)
+            {
+                var panel = _secondaryTextColorButton.Content as StackPanel;
+                if (panel != null && panel.Children.Count >= 2)
+                {
+                    (panel.Children[0] as Border).Background = CreateBrush(AppSettings.SecondaryTextColor);
+                    (panel.Children[1] as TextBlock).Text = AppSettings.SecondaryTextColor;
+                }
+            }
+        }
+
+        private SolidColorBrush CreateBrush(string hexColor)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(hexColor))
+                    return new SolidColorBrush(Colors.White);
+
+                if (!hexColor.StartsWith("#"))
+                    hexColor = "#" + hexColor;
+
+                var color = (Color)ColorConverter.ConvertFromString(hexColor);
+                return new SolidColorBrush(color);
+            }
+            catch
+            {
+                return new SolidColorBrush(Colors.White);
+            }
+        }
+
+        private void UpdatePreview()
+        {
+            if (_previewPanel == null || _previewText == null)
+                return;
+
+            _previewPanel.Background = CreateBrush(AppSettings.BackgroundColor);
+            _previewPanel.BorderBrush = CreateBrush(AppSettings.BorderColor);
+            _previewText.Foreground = CreateBrush(AppSettings.TextColor);
+            _previewText.FontFamily = new FontFamily(AppSettings.FontFamily);
+            _previewText.FontSize = AppSettings.FontSize;
         }
 
         private ScrollViewer CreateAboutTab()
@@ -1015,6 +1518,8 @@ namespace RestartIt
             _loggingTab.Header = LocalizationService.Instance.GetString("Settings.Logging", "Logging");
             _emailTab.Header = LocalizationService.Instance.GetString("Settings.EmailNotifications", "Email Notifications");
             _appTab.Header = LocalizationService.Instance.GetString("Settings.Application", "Application");
+            if (_appearanceTab != null)
+                _appearanceTab.Header = LocalizationService.Instance.GetString("Settings.Appearance", "Appearance");
             _aboutTab.Header = LocalizationService.Instance.GetString("Settings.About", "About");
 
             // Update buttons
@@ -1104,6 +1609,147 @@ namespace RestartIt
             }
         }
 
+        private void ApplyButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Validate logging settings (same as OK button)
+            if (!int.TryParse(_maxLogSizeTextBox.Text, out int maxSize) || maxSize < 1)
+            {
+                MessageBox.Show("Max log file size must be a positive number.", "Validation Error",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!int.TryParse(_keepLogsDaysTextBox.Text, out int keepDays) || keepDays < 1)
+            {
+                MessageBox.Show("Keep log files for days must be a positive number.", "Validation Error",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Validate email settings
+            if (_enableEmailCheckBox.IsChecked == true)
+            {
+                if (string.IsNullOrWhiteSpace(_smtpServerTextBox.Text))
+                {
+                    MessageBox.Show("SMTP server is required for email notifications.", "Validation Error",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (!int.TryParse(_smtpPortTextBox.Text, out int port) || port < 1 || port > 65535)
+                {
+                    MessageBox.Show("SMTP port must be between 1 and 65535.", "Validation Error",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(_senderEmailTextBox.Text) || !_senderEmailTextBox.Text.Contains("@"))
+                {
+                    MessageBox.Show(
+                        LocalizationService.Instance.GetString("Settings.Email.SenderEmailRequired", "Please enter sender email."),
+                        LocalizationService.Instance.GetString("ProgramEdit.ValidationError", "Validation Error"),
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(_recipientEmailTextBox.Text) || !_recipientEmailTextBox.Text.Contains("@"))
+                {
+                    MessageBox.Show(
+                        LocalizationService.Instance.GetString("Settings.Email.RecipientEmailRequired", "Please enter recipient email."),
+                        LocalizationService.Instance.GetString("ProgramEdit.ValidationError", "Validation Error"),
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+
+            // Save all settings (same as OK button)
+            SaveAllSettings();
+
+            // Apply theme changes immediately
+            ThemeService.Instance.ApplyTheme(AppSettings);
+
+            // Apply language changes immediately
+            if (_languageComboBox.SelectedItem is LanguageInfo selectedLang)
+            {
+                LocalizationService.Instance.LoadLanguage(selectedLang.Code);
+            }
+
+            // Update UI text with new language
+            UpdateUIText();
+
+            // Show brief feedback
+            _applyButton.Content = LocalizationService.Instance.GetString("Dialog.Applied", "Applied!");
+            var originalContent = LocalizationService.Instance.GetString("Dialog.Apply", "Apply");
+            System.Threading.Tasks.Task.Delay(1000).ContinueWith(_ =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    _applyButton.Content = originalContent;
+                });
+            });
+        }
+
+        private void SaveAllSettings()
+        {
+            // Save log settings
+            LogSettings.LogFilePath = _logPathTextBox.Text;
+            LogSettings.MinimumLogLevel = (LogLevel)_logLevelComboBox.SelectedItem;
+            LogSettings.EnableFileLogging = _enableFileLoggingCheckBox.IsChecked ?? true;
+            LogSettings.MaxLogFileSizeMB = int.Parse(_maxLogSizeTextBox.Text);
+            LogSettings.KeepLogFilesForDays = int.Parse(_keepLogsDaysTextBox.Text);
+
+            // Save email settings
+            NotificationSettings.EnableEmailNotifications = _enableEmailCheckBox.IsChecked ?? false;
+            NotificationSettings.SmtpServer = _smtpServerTextBox.Text;
+            NotificationSettings.SmtpPort = int.Parse(_smtpPortTextBox.Text);
+            NotificationSettings.UseSSL = _useSslCheckBox.IsChecked ?? true;
+            NotificationSettings.SenderEmail = _senderEmailTextBox.Text;
+            NotificationSettings.SenderName = _senderNameTextBox.Text;
+            
+            // Convert PasswordBox password to SecureString and encrypt immediately
+            // Only update password if user entered a new one (PasswordBox is not empty)
+            System.Security.SecureString securePassword = null;
+            try
+            {
+                if (!string.IsNullOrEmpty(_senderPasswordBox.Password))
+                {
+                    // User entered a new password - convert to SecureString and encrypt
+                    securePassword = new System.Security.SecureString();
+                    foreach (char c in _senderPasswordBox.Password)
+                    {
+                        securePassword.AppendChar(c);
+                    }
+                    // Encrypt SecureString immediately - password never stored as plain text
+                    NotificationSettings.SenderPassword = CredentialManager.EncryptSecureString(securePassword);
+                }
+                else
+                {
+                    // User didn't enter a new password - keep the original encrypted password
+                    NotificationSettings.SenderPassword = _originalEncryptedPassword ?? string.Empty;
+                }
+            }
+            finally
+            {
+                // Clear SecureString from memory immediately
+                securePassword?.Dispose();
+            }
+            
+            NotificationSettings.RecipientEmail = _recipientEmailTextBox.Text;
+            NotificationSettings.NotifyOnRestart = _notifyOnRestartCheckBox.IsChecked ?? true;
+            NotificationSettings.NotifyOnFailure = _notifyOnFailureCheckBox.IsChecked ?? true;
+
+            // Save app settings
+            AppSettings.StartWithWindows = _startWithWindowsCheckBox.IsChecked ?? false;
+            AppSettings.MinimizeToTray = _minimizeToTrayCheckBox.IsChecked ?? true;
+            AppSettings.StartMinimized = _startMinimizedCheckBox.IsChecked ?? false;
+
+            // Save language selection
+            if (_languageComboBox.SelectedItem is LanguageInfo selectedLang)
+            {
+                AppSettings.Language = selectedLang.Code;
+            }
+        }
+
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
             // Validate logging settings
@@ -1157,72 +1803,8 @@ namespace RestartIt
                 }
             }
 
-            // Save log settings
-            LogSettings.LogFilePath = _logPathTextBox.Text;
-            LogSettings.MinimumLogLevel = (LogLevel)_logLevelComboBox.SelectedItem;
-            LogSettings.EnableFileLogging = _enableFileLoggingCheckBox.IsChecked ?? true;
-            LogSettings.MaxLogFileSizeMB = maxSize;
-            LogSettings.KeepLogFilesForDays = keepDays;
-
-            // Save email settings
-            NotificationSettings.EnableEmailNotifications = _enableEmailCheckBox.IsChecked ?? false;
-            NotificationSettings.SmtpServer = _smtpServerTextBox.Text;
-            NotificationSettings.SmtpPort = int.Parse(_smtpPortTextBox.Text);
-            NotificationSettings.UseSSL = _useSslCheckBox.IsChecked ?? true;
-            NotificationSettings.SenderEmail = _senderEmailTextBox.Text;
-            NotificationSettings.SenderName = _senderNameTextBox.Text;
-            
-            // Convert PasswordBox password to SecureString and encrypt immediately
-            // Only update password if user entered a new one (PasswordBox is not empty)
-            SecureString securePassword = null;
-            try
-            {
-                if (!string.IsNullOrEmpty(_senderPasswordBox.Password))
-                {
-                    // User entered a new password - convert to SecureString and encrypt
-                    securePassword = new SecureString();
-                    foreach (char c in _senderPasswordBox.Password)
-                    {
-                        securePassword.AppendChar(c);
-                    }
-                    // Encrypt SecureString immediately - password never stored as plain text
-                    NotificationSettings.SenderPassword = CredentialManager.EncryptSecureString(securePassword);
-                }
-                else
-                {
-                    // User didn't enter a new password - keep the original encrypted password
-                    NotificationSettings.SenderPassword = _originalEncryptedPassword ?? string.Empty;
-                }
-            }
-            finally
-            {
-                // Clear SecureString from memory immediately
-                securePassword?.Dispose();
-            }
-            
-            NotificationSettings.RecipientEmail = _recipientEmailTextBox.Text;
-            NotificationSettings.NotifyOnRestart = _notifyOnRestartCheckBox.IsChecked ?? true;
-            NotificationSettings.NotifyOnFailure = _notifyOnFailureCheckBox.IsChecked ?? true;
-
-            // Save app settings
-            AppSettings.StartWithWindows = _startWithWindowsCheckBox.IsChecked ?? false;
-            AppSettings.MinimizeToTray = _minimizeToTrayCheckBox.IsChecked ?? true;
-            AppSettings.StartMinimized = _startMinimizedCheckBox.IsChecked ?? false;
-
-            // Save language selection
-            System.Diagnostics.Debug.WriteLine($"Language ComboBox SelectedItem: {_languageComboBox.SelectedItem}");
-            System.Diagnostics.Debug.WriteLine($"Language ComboBox SelectedItem Type: {_languageComboBox.SelectedItem?.GetType()}");
-
-            if (_languageComboBox.SelectedItem is LanguageInfo selectedLang)
-            {
-                System.Diagnostics.Debug.WriteLine($"Selected language: {selectedLang.Code} - {selectedLang.NativeName}");
-                AppSettings.Language = selectedLang.Code;
-                LocalizationService.Instance.LoadLanguage(selectedLang.Code);
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("SelectedItem is NOT a LanguageInfo!");
-            }
+            // Save all settings using shared method
+            SaveAllSettings();
 
             DialogResult = true;
             Close();

@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.2] - 2025-01-27
+
+### Added
+- **Catppuccin Theme Support** - Complete integration with Catppuccin color palette
+  - 4 theme flavors: Latte (light), Frappe, Macchiato, and Mocha (dark)
+  - Theme preset selector in Appearance settings tab
+  - Automatic color mapping following Catppuccin style guide
+  - All palette colors included for future extensibility
+- **Theme Service** - New ThemeService singleton for dynamic theme application
+  - Real-time theme updates without application restart
+  - Automatic resource dictionary updates
+  - Derived color generation (hover states, light variants)
+- **Apply Button** - New Apply button in Settings dialog
+  - Instant preview of theme and language changes
+  - Apply changes without closing the dialog
+  - Visual feedback with "Applied!" confirmation
+- **Appearance Settings Tab** - New tab in Settings dialog
+  - Font family selection (10 common system fonts)
+  - Font size slider (8-24pt)
+  - 6 color pickers with live preview
+  - Theme preset dropdown
+  - Reset to defaults functionality
+- **Localization Updates** - Added appearance-related strings to all 16 language files
+
+### Fixed
+- **Color Picker Bug** - Fixed issue where color picker returned named colors (e.g., "Black") instead of hex values
+  - Now always returns hex format (e.g., "#000000")
+  - Ensures proper color application across all themes
+- **DataGrid Text Visibility** - Fixed barely visible text on light themes
+  - Proper theme color mapping for row backgrounds
+  - Dynamic resource binding for all text elements
+  - Alternating row colors now use theme colors
+- **Settings Dialog Theming** - Applied theme styling to Settings dialog
+  - Window background uses theme colors
+  - TabControl and TabItems styled with theme
+  - Buttons use theme highlight colors
+  - All content areas properly themed
+- **Status Badge Visibility** - Improved text contrast on status indicator
+  - Changed to use HighlightColor background with white text
+  - Better visibility across all themes
+
+### Changed
+- **Theme System** - Enhanced theming infrastructure
+  - All UI elements now use DynamicResource for theme colors
+  - Settings dialog fully integrated with theme system
+  - Real-time theme application throughout application
+
 ## [1.3.1] - 2025-01-27
 
 ### Added
@@ -129,7 +176,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add/Edit/Remove monitored programs
 - Configuration persistence in %AppData%\RestartIt\config.json
 
-[Unreleased]: https://github.com/Antik79/RestartIt/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/Antik79/RestartIt/compare/v1.3.2...HEAD
+[1.3.2]: https://github.com/Antik79/RestartIt/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/Antik79/RestartIt/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/Antik79/RestartIt/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/Antik79/RestartIt/compare/v1.2.0...v1.2.1

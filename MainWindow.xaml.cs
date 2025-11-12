@@ -64,6 +64,9 @@ namespace RestartIt
             LocalizationService.Instance.LoadLanguage(_configManager.AppSettings.Language);
             LocalizationService.Instance.LanguageChanged += OnLanguageChanged;
 
+            // Apply theme
+            ThemeService.Instance.ApplyTheme(_configManager.AppSettings);
+
             ProgramsDataGrid.ItemsSource = _programs;
 
             _logger.LogMessageReceived += Logger_LogMessageReceived;
@@ -276,6 +279,9 @@ namespace RestartIt
 
                 // Update startup registry
                 StartupManager.SetStartup(settingsDialog.AppSettings.StartWithWindows);
+
+                // Apply theme changes
+                ThemeService.Instance.ApplyTheme(settingsDialog.AppSettings);
 
                 SaveConfiguration();
                 LogMessage(LocalizationService.Instance.GetString("Log.SettingsUpdated", "Settings updated"), LogLevel.Info);
