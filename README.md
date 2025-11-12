@@ -13,7 +13,6 @@
 - **Customizable Themes** - Create and save custom themes with full color and font control
 - **Multi-Language Support** - Available in 17 languages with real-time switching
 - **System Tray Integration** - Runs quietly in the background
-- **Easy Configuration** - Simple dialogs for adding and editing monitored programs
 
 ## Quick Start
 
@@ -27,49 +26,20 @@
 
 ### Windows SmartScreen Warning
 
-When running RestartIt for the first time, you may see a **"Windows protected your PC"** message. This is normal for applications without a code signing certificate.
-
-**To run the application:**
-1. Click **"More info"**
-2. Click **"Run anyway"**
-
-This warning appears because RestartIt is not code-signed. The application is safe and open-source. To avoid this warning, you can [build from source](https://github.com/Antik79/RestartIt/wiki/Developer-Guide#development-setup).
+When running RestartIt for the first time, you may see a **"Windows protected your PC"** message. This is normal for unsigned applications. Click **"More info"** then **"Run anyway"** to proceed. The application is safe and open-source.
 
 ## Basic Usage
 
-### Adding a Program to Monitor
+1. **Add Programs**: Click **"➕ Add Program"** to monitor an application
+2. **Configure Notifications**: Go to **Settings** → **Notifications** to set up email or taskbar alerts
+3. **Customize Appearance**: Go to **Settings** → **Appearance** to change themes, colors, and fonts
+4. **Change Language**: Go to **Settings** → **Application** to select from 17 available languages
 
-1. Click the **"➕ Add Program"** button
-2. Browse to select the executable file (.exe)
-3. Configure settings (name, check interval, restart delay, etc.)
-4. Click **OK** to add
-
-### Configuring Notifications
-
-Go to **Settings** → **Notifications** tab to configure:
-- **Email Notifications** - SMTP-based email alerts
-- **Taskbar Notifications** - Windows balloon tip notifications
-
-**Note for Gmail users:** You'll need to use an [App Password](https://support.google.com/accounts/answer/185833) instead of your regular password.
-
-### Changing Language
-
-1. Open **Settings** → **Application** tab
-2. Select your preferred language from the dropdown
-3. Click **OK** to apply
-
-RestartIt supports **17 languages** including English, Spanish, French, German, Italian, Japanese, Korean, Chinese, and more.
-
-### Customizing Appearance
-
-Go to **Settings** → **Appearance** tab to:
-- Select a theme preset (Light, Dark, or custom themes)
-- Customize colors, fonts, and appearance
-- Save your custom theme for reuse
+For detailed instructions, see the [Documentation](#documentation) section below.
 
 ## Documentation
 
-For detailed information, see the guides in the [`Docs/`](Docs/) folder:
+Comprehensive guides are available in the [`Docs/`](Docs/) folder:
 
 - **[Developer Guide](Docs/Developer-Guide.md)** - Architecture, development setup, and contributing guidelines
 - **[Troubleshooting Guide](Docs/Troubleshooting-Guide.md)** - Common issues and solutions
@@ -88,10 +58,7 @@ A: No, RestartIt only monitors executable (.exe) files. For Windows services, us
 A: No, RestartIt requires Windows 10 or later and .NET 8.0 Runtime.
 
 **Q: Where are my settings stored?**  
-A: Settings are stored in `%APPDATA%\RestartIt\config.json`.
-
-**Q: How do I backup my configuration?**  
-A: Simply copy the `config.json` file. Note that encrypted passwords are tied to your Windows user account.
+A: Settings are stored in `%APPDATA%\RestartIt\config.json`. See the [Configuration Guide](Docs/Configuration-Guide.md) for details.
 
 **Q: Can I contribute translations or themes?**  
 A: Yes! Please see our [Translation Guide](Docs/Translation-Guide.md) and [Theming Guide](Docs/Theming-Guide.md).
@@ -105,10 +72,7 @@ If you encounter issues or have questions:
 
 ## Contributing
 
-Contributions are welcome! See our [Developer Guide](Docs/Developer-Guide.md) for:
-- Development setup
-- Code style guidelines
-- How to contribute features, translations, or bug fixes
+Contributions are welcome! See our [Developer Guide](Docs/Developer-Guide.md) for development setup, code style guidelines, and how to contribute.
 
 ## License
 
