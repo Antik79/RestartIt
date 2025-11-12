@@ -9,6 +9,7 @@ using System.Net.Mail;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
+using Forms = System.Windows.Forms;
 
 namespace RestartIt
 {
@@ -132,6 +133,7 @@ namespace RestartIt
         private readonly object _logLock = new object();
         private StreamWriter _logWriter;
         private string _currentLogFile;
+        private string _programName; // For per-program logging
 
         /// <summary>
         /// Event raised when a log message is received. Subscribers can update UI or handle logging.
@@ -142,9 +144,11 @@ namespace RestartIt
         /// Initializes a new instance of the LoggerService with the specified settings.
         /// </summary>
         /// <param name="settings">The log settings containing file path, level, and rotation settings</param>
-        public LoggerService(LogSettings settings)
+        /// <param name="programName">Optional program name for per-program logging. If provided, log files will be named {ProgramName}_{yyyy-MM-dd}.log</param>
+        public LoggerService(LogSettings settings, string programName = null)
         {
             _settings = settings;
+            _programName = programName;
             InitializeLogFile();
         }
 
@@ -173,7 +177,9 @@ namespace RestartIt
                 Directory.CreateDirectory(_settings.LogFilePath);
                 CleanupOldLogFiles();
 
-                string fileName = $"RestartIt_{DateTime.Now:yyyy-MM-dd}.log";
+                string fileName = string.IsNullOrWhiteSpace(_programName) 
+                    ? $"RestartIt_{DateTime.Now:yyyy-MM-dd}.log"
+                    : $"{_programName}_{DateTime.Now:yyyy-MM-dd}.log";
                 _currentLogFile = Path.Combine(_settings.LogFilePath, fileName);
 
                 _logWriter = new StreamWriter(_currentLogFile, append: true)
@@ -199,7 +205,10 @@ namespace RestartIt
                     return;
 
                 var cutoffDate = DateTime.Now.AddDays(-_settings.KeepLogFilesForDays);
-                var oldFiles = directory.GetFiles("RestartIt_*.log")
+                string pattern = string.IsNullOrWhiteSpace(_programName)
+                    ? "RestartIt_*.log"
+                    : $"{_programName}_*.log";
+                var oldFiles = directory.GetFiles(pattern)
                     .Where(f => f.CreationTime < cutoffDate);
 
                 foreach (var file in oldFiles)
@@ -232,7 +241,9 @@ namespace RestartIt
             try
             {
                 var fileInfo = new FileInfo(_currentLogFile);
-                string expectedFileName = $"RestartIt_{DateTime.Now:yyyy-MM-dd}.log";
+                string expectedFileName = string.IsNullOrWhiteSpace(_programName)
+                    ? $"RestartIt_{DateTime.Now:yyyy-MM-dd}.log"
+                    : $"{_programName}_{DateTime.Now:yyyy-MM-dd}.log";
                 string expectedPath = Path.Combine(_settings.LogFilePath, expectedFileName);
 
                 // Rotate if date changed or file too large
@@ -343,9 +354,12 @@ namespace RestartIt
     {
         private readonly ObservableCollection<MonitoredProgram> _programs;
         private readonly LoggerService _logger;
+        private readonly LogSettings _globalLogSettings;
         private readonly Dictionary<MonitoredProgram, CancellationTokenSource> _monitorTasks;
+        private readonly Dictionary<MonitoredProgram, LoggerService> _programLoggers;
         private EmailNotificationService _emailService;
         private NotificationSettings _notificationSettings;
+        private Forms.NotifyIcon _notifyIcon;
         private bool _isRunning;
 
         /// <summary>
@@ -364,14 +378,25 @@ namespace RestartIt
         /// <param name="programs">The collection of programs to monitor</param>
         /// <param name="logger">The logger service for recording monitoring events</param>
         /// <param name="notificationSettings">Settings for email notifications</param>
+        /// <param name="notifyIcon">Optional NotifyIcon for taskbar notifications</param>
         public ProcessMonitorService(ObservableCollection<MonitoredProgram> programs,
-            LoggerService logger, NotificationSettings notificationSettings)
+            LoggerService logger, NotificationSettings notificationSettings, Forms.NotifyIcon notifyIcon = null, LogSettings globalLogSettings = null)
         {
             _programs = programs;
             _logger = logger;
+            _globalLogSettings = globalLogSettings ?? new LogSettings
+            {
+                EnableFileLogging = true,
+                LogFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RestartIt", "logs"),
+                MinimumLogLevel = LogLevel.Info,
+                MaxLogFileSizeMB = 10,
+                KeepLogFilesForDays = 30
+            };
             _notificationSettings = notificationSettings;
             _emailService = new EmailNotificationService(notificationSettings);
+            _notifyIcon = notifyIcon;
             _monitorTasks = new Dictionary<MonitoredProgram, CancellationTokenSource>();
+            _programLoggers = new Dictionary<MonitoredProgram, LoggerService>();
         }
 
         /// <summary>
@@ -382,6 +407,141 @@ namespace RestartIt
         {
             _notificationSettings = settings;
             _emailService = new EmailNotificationService(settings);
+        }
+
+        /// <summary>
+        /// Updates the NotifyIcon reference (in case it's recreated).
+        /// </summary>
+        /// <param name="notifyIcon">The new NotifyIcon instance</param>
+        public void UpdateNotifyIcon(Forms.NotifyIcon notifyIcon)
+        {
+            _notifyIcon = notifyIcon;
+        }
+
+        /// <summary>
+        /// Gets or creates a logger for the specified program.
+        /// Returns the global logger if per-program logging is disabled or not configured.
+        /// </summary>
+        private LoggerService GetLoggerForProgram(MonitoredProgram program)
+        {
+            // If per-program logging is disabled, use global logger
+            if (!program.EnableFileLogging)
+            {
+                return _logger;
+            }
+
+            // If logger already exists, return it
+            if (_programLoggers.TryGetValue(program, out var existingLogger))
+            {
+                return existingLogger;
+            }
+
+            // Create per-program logger
+            var logSettings = new LogSettings
+            {
+                EnableFileLogging = program.EnableFileLogging,
+                LogFilePath = string.IsNullOrWhiteSpace(program.LogFilePath) ? _globalLogSettings.LogFilePath : program.LogFilePath,
+                MinimumLogLevel = program.MinimumLogLevel,
+                MaxLogFileSizeMB = program.MaxLogFileSizeMB,
+                KeepLogFilesForDays = program.KeepLogFilesForDays
+            };
+
+            var programLogger = new LoggerService(logSettings, program.ProgramName);
+            
+            // Forward log events to the global logger so UI receives them
+            // Per-program loggers write to their own files, but UI shows all logs
+            programLogger.LogMessageReceived += (s, e) =>
+            {
+                // Forward to global logger for UI display
+                _logger?.Log(e.Message, e.Level);
+            };
+
+            _programLoggers[program] = programLogger;
+            return programLogger;
+        }
+
+        /// <summary>
+        /// Shows a taskbar notification balloon tip if enabled.
+        /// Respects both global and per-program notification settings.
+        /// </summary>
+        /// <param name="program">The program related to the notification</param>
+        /// <param name="title">The notification title</param>
+        /// <param name="message">The notification message</param>
+        /// <param name="icon">The notification icon type</param>
+        private void ShowTaskbarNotification(MonitoredProgram program, string title, string message, Forms.ToolTipIcon icon)
+        {
+            // Check if taskbar notifications are enabled globally
+            if (!_notificationSettings.EnableTaskbarNotifications)
+            {
+                Debug.WriteLine($"Taskbar notification skipped: Global notifications disabled");
+                return;
+            }
+
+            // Check if taskbar notifications are enabled for this program
+            if (!program.EnableTaskbarNotifications)
+            {
+                Debug.WriteLine($"Taskbar notification skipped: Program '{program.ProgramName}' notifications disabled");
+                return;
+            }
+
+            // Show notification on UI thread
+            if (_notifyIcon == null)
+            {
+                Debug.WriteLine($"Taskbar notification skipped: NotifyIcon is null");
+                return;
+            }
+
+            try
+            {
+                Debug.WriteLine($"Attempting to show taskbar notification: {title} - {message}");
+                var app = System.Windows.Application.Current;
+                if (app == null)
+                {
+                    Debug.WriteLine($"Taskbar notification failed: Application.Current is null");
+                    return;
+                }
+
+                var dispatcher = app.Dispatcher;
+                if (dispatcher == null)
+                {
+                    Debug.WriteLine($"Taskbar notification failed: Application dispatcher is null");
+                    return;
+                }
+
+                // Use BeginInvoke for async execution - Windows Forms NotifyIcon works better this way
+                dispatcher.BeginInvoke(new Action(() =>
+                {
+                    try
+                    {
+                        // Double-check NotifyIcon is still valid on UI thread
+                        if (_notifyIcon == null)
+                        {
+                            Debug.WriteLine($"Taskbar notification failed: NotifyIcon is null on UI thread");
+                            return;
+                        }
+
+                        if (!_notifyIcon.Visible)
+                        {
+                            Debug.WriteLine($"Taskbar notification failed: NotifyIcon is not visible on UI thread");
+                            return;
+                        }
+
+                        // Show the balloon tip
+                        _notifyIcon.ShowBalloonTip(5000, title, message, icon);
+                        Debug.WriteLine($"Taskbar notification shown successfully: {title} - {message}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Error showing taskbar notification: {ex.Message}");
+                        Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                    }
+                }), System.Windows.Threading.DispatcherPriority.Normal);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error invoking taskbar notification: {ex.Message}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
         }
 
         /// <summary>
@@ -496,10 +656,20 @@ namespace RestartIt
                 _monitorTasks.Remove(program);
                 program.Status = "Disabled";
             }
+
+            // Dispose per-program logger if it exists
+            if (_programLoggers.TryGetValue(program, out var logger))
+            {
+                logger.Dispose();
+                _programLoggers.Remove(program);
+            }
         }
 
         private async Task MonitorProgramAsync(MonitoredProgram program, CancellationToken cancellationToken)
         {
+            string previousStatus = program.Status;
+            bool isFirstCheck = true; // Track if this is the first check after enabling
+            
             while (!cancellationToken.IsCancellationRequested && program.Enabled)
             {
                 try
@@ -508,21 +678,82 @@ namespace RestartIt
 
                     if (isRunning)
                     {
-                        program.Status = "Running";
+                        // Only notify if status changed from stopped/failed to running (not from Restarting, as RestartProgram already sent notification)
+                        // Don't notify if it was disabled (just enabled) or if it's the first check
+                        if (previousStatus != "Running" && previousStatus != "Disabled" && previousStatus != "Restarting" && !isFirstCheck)
+                        {
+                            program.Status = "Running";
+                            
+                            // Send notification when program is detected as running again (came back online on its own, not via restart)
+                            if (_notificationSettings.NotifyOnRestart)
+                            {
+                                _emailService.SendNotification(
+                                    $"Program Running: {program.ProgramName}",
+                                    $"The program '{program.ProgramName}' is now running.\n\n" +
+                                    $"Executable: {program.ExecutablePath}\n" +
+                                    $"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                            }
+
+                            // Show taskbar notification when program is detected as running
+                            if (_notificationSettings.NotifyOnRestartTaskbar)
+                            {
+                                string notificationMessage = string.Format(
+                                    LocalizationService.Instance.GetString("Notification.ProgramRunning", "{0} is now running"),
+                                    program.ProgramName);
+                                ShowTaskbarNotification(program, "RestartIt", notificationMessage, Forms.ToolTipIcon.Info);
+                            }
+                        }
+                        else
+                        {
+                            program.Status = "Running";
+                        }
+                        previousStatus = "Running";
+                        isFirstCheck = false;
                     }
                     else
                     {
-                        program.Status = "Stopped";
-                        string message = string.Format(
-                            LocalizationService.Instance.GetString("Log.ProgramNotRunning", "{0} is not running. Restarting in {1} seconds..."),
-                            program.ProgramName,
-                            program.RestartDelaySeconds);
-                        _logger.Log(message, LogLevel.Warning);
+                        // Only notify if status changed from running to stopped
+                        // Don't notify on first check if program was disabled (just enabled)
+                        if ((previousStatus == "Running" || (previousStatus == null && !isFirstCheck)) && !isFirstCheck)
+                        {
+                            program.Status = "Stopped";
+                            string message = string.Format(
+                                LocalizationService.Instance.GetString("Log.ProgramNotRunning", "{0} is not running. Restarting in {1} seconds..."),
+                                program.ProgramName,
+                                program.RestartDelaySeconds);
+                            GetLoggerForProgram(program).Log(message, LogLevel.Warning);
+
+                            // Send notification when program is detected as stopped
+                            if (_notificationSettings.NotifyOnStop)
+                            {
+                                _emailService.SendNotification(
+                                    $"Program Stopped: {program.ProgramName}",
+                                    $"The program '{program.ProgramName}' has stopped running and will be restarted.\n\n" +
+                                    $"Executable: {program.ExecutablePath}\n" +
+                                    $"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                            }
+
+                            // Show taskbar notification when program is detected as stopped
+                            if (_notificationSettings.NotifyOnStopTaskbar)
+                            {
+                                string notificationMessage = string.Format(
+                                    LocalizationService.Instance.GetString("Notification.ProgramStopped", "{0} has stopped"),
+                                    program.ProgramName);
+                                ShowTaskbarNotification(program, "RestartIt", notificationMessage, Forms.ToolTipIcon.Warning);
+                            }
+                        }
+                        else
+                        {
+                            program.Status = "Stopped";
+                        }
+
+                        isFirstCheck = false;
 
                         await Task.Delay(program.RestartDelaySeconds * 1000, cancellationToken);
 
                         program.Status = "Restarting";
                         RestartProgram(program);
+                        previousStatus = "Restarting";
                     }
 
                     await Task.Delay(program.CheckIntervalSeconds * 1000, cancellationToken);
@@ -537,7 +768,7 @@ namespace RestartIt
                         LocalizationService.Instance.GetString("Log.ErrorMonitoring", "Error monitoring {0}: {1}"),
                         program.ProgramName,
                         ex.Message);
-                    _logger.Log(message, LogLevel.Error);
+                    GetLoggerForProgram(program).Log(message, LogLevel.Error);
                 }
             }
         }
@@ -631,7 +862,7 @@ namespace RestartIt
                         LocalizationService.Instance.GetString("Log.ValidationFailed", "Cannot restart {0}: {1}"),
                         program.ProgramName,
                         pathError);
-                    _logger.Log(message, LogLevel.Error);
+                    GetLoggerForProgram(program).Log(message, LogLevel.Error);
 
                     // Send email notification on validation failure
                     if (_notificationSettings.NotifyOnFailure)
@@ -642,6 +873,15 @@ namespace RestartIt
                             $"Executable: {program.ExecutablePath}\n" +
                             $"Error: {pathError}\n" +
                             $"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                    }
+
+                    // Show taskbar notification on failure
+                    if (_notificationSettings.NotifyOnFailureTaskbar)
+                    {
+                        string notificationMessage = string.Format(
+                            LocalizationService.Instance.GetString("Notification.RestartFailure", "Failed to restart {0}"),
+                            program.ProgramName);
+                        ShowTaskbarNotification(program, "RestartIt", notificationMessage, Forms.ToolTipIcon.Error);
                     }
                     return;
                 }
@@ -656,7 +896,7 @@ namespace RestartIt
                             LocalizationService.Instance.GetString("Log.WorkingDirectoryInvalid", "Cannot restart {0}: Working directory invalid - {1}"),
                             program.ProgramName,
                             dirError);
-                        _logger.Log(message, LogLevel.Error);
+                        GetLoggerForProgram(program).Log(message, LogLevel.Error);
 
                         if (_notificationSettings.NotifyOnFailure)
                         {
@@ -667,6 +907,15 @@ namespace RestartIt
                                 $"Working Directory: {program.WorkingDirectory}\n" +
                                 $"Error: {dirError}\n" +
                                 $"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                        }
+
+                        // Show taskbar notification on failure
+                        if (_notificationSettings.NotifyOnFailureTaskbar)
+                        {
+                            string notificationMessage = string.Format(
+                                LocalizationService.Instance.GetString("Notification.RestartFailure", "Failed to restart {0}"),
+                                program.ProgramName);
+                            ShowTaskbarNotification(program, "RestartIt", notificationMessage, Forms.ToolTipIcon.Error);
                         }
                         return;
                     }
@@ -680,7 +929,7 @@ namespace RestartIt
                         LocalizationService.Instance.GetString("Log.ArgumentsInvalid", "Cannot restart {0}: Arguments invalid - {1}"),
                         program.ProgramName,
                         argsError);
-                    _logger.Log(message, LogLevel.Error);
+                    GetLoggerForProgram(program).Log(message, LogLevel.Error);
 
                     if (_notificationSettings.NotifyOnFailure)
                     {
@@ -690,6 +939,15 @@ namespace RestartIt
                             $"Executable: {program.ExecutablePath}\n" +
                             $"Error: {argsError}\n" +
                             $"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                    }
+
+                    // Show taskbar notification on failure
+                    if (_notificationSettings.NotifyOnFailureTaskbar)
+                    {
+                        string notificationMessage = string.Format(
+                            LocalizationService.Instance.GetString("Notification.RestartFailure", "Failed to restart {0}"),
+                            program.ProgramName);
+                        ShowTaskbarNotification(program, "RestartIt", notificationMessage, Forms.ToolTipIcon.Error);
                     }
                     return;
                 }
@@ -714,7 +972,7 @@ namespace RestartIt
                 string successMessage = string.Format(
                     LocalizationService.Instance.GetString("Log.SuccessfullyRestarted", "Successfully restarted {0}"),
                     program.ProgramName);
-                _logger.Log(successMessage, LogLevel.Info);
+                GetLoggerForProgram(program).Log(successMessage, LogLevel.Info);
 
                 // Send email notification on successful restart
                 if (_notificationSettings.NotifyOnRestart)
@@ -724,6 +982,15 @@ namespace RestartIt
                         $"The program '{program.ProgramName}' has been automatically restarted.\n\n" +
                         $"Executable: {program.ExecutablePath}\n" +
                         $"Restart Time: {program.LastRestartTime:yyyy-MM-dd HH:mm:ss}");
+                }
+
+                // Show taskbar notification on successful restart
+                if (_notificationSettings.NotifyOnRestartTaskbar)
+                {
+                    string notificationMessage = string.Format(
+                        LocalizationService.Instance.GetString("Notification.RestartSuccess", "{0} restarted successfully"),
+                        program.ProgramName);
+                    ShowTaskbarNotification(program, "RestartIt", notificationMessage, Forms.ToolTipIcon.Info);
                 }
             }
             catch (Exception ex)
@@ -744,6 +1011,15 @@ namespace RestartIt
                         $"Executable: {program.ExecutablePath}\n" +
                         $"Error: {ex.Message}\n" +
                         $"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                }
+
+                // Show taskbar notification on failure
+                if (_notificationSettings.NotifyOnFailureTaskbar)
+                {
+                    string notificationMessage = string.Format(
+                        LocalizationService.Instance.GetString("Notification.RestartFailure", "Failed to restart {0}"),
+                        program.ProgramName);
+                    ShowTaskbarNotification(program, "RestartIt", notificationMessage, Forms.ToolTipIcon.Error);
                 }
             }
         }

@@ -1,0 +1,17 @@
+{
+  "name": "Dark Cyan Tech",
+  "displayName": "Dark Cyan Tech",
+  "description": "Modern dark theme inspired by the RestartIt logo — deep charcoal tones with cyan highlights.",
+  "author": "RestartIt",
+  "version": "1.0",
+  "colors": {
+    "BackgroundColor": "#0E0E10",
+    "TextColor": "#CFCFCF",
+    "HighlightColor": "#00C6FF",
+    "BorderColor": "#1F1F25",
+    "SurfaceColor": "#1A1A1D",
+    "SecondaryTextColor": "#7A7A7A"
+  },
+  "fontFamily": "Segoe UI",
+  "fontSize": 12.0
+}

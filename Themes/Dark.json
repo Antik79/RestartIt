@@ -1,0 +1,20 @@
+{
+  "name": "Dark",
+  "displayName": "Dark",
+  "description": "Modern dark theme with dark grays and blacks",
+  "author": "RestartIt",
+  "version": "1.0",
+  "colors": {
+    "BackgroundColor": "#1E1E1E",
+    "TextColor": "#E0E0E0",
+    "HighlightColor": "#0078D4",
+    "BorderColor": "#404040",
+    "SurfaceColor": "#2D2D2D",
+    "SecondaryTextColor": "#B0B0B0",
+    "ButtonTextColor": "#FFFFFF",
+    "HeaderColor": "#2D2D2D"
+  },
+  "fontFamily": "Segoe UI",
+  "fontSize": 12.0
+}
+

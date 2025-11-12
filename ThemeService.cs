@@ -28,6 +28,20 @@ namespace RestartIt
         }
 
         /// <summary>
+        /// Applies a theme from a ThemeDefinition to the application.
+        /// </summary>
+        /// <param name="theme">The theme definition to apply</param>
+        public void ApplyTheme(ThemeDefinition theme)
+        {
+            if (theme == null || !theme.IsValid())
+                return;
+
+            var settings = new AppSettings();
+            theme.ApplyToAppSettings(settings);
+            ApplyTheme(settings);
+        }
+
+        /// <summary>
         /// Applies theme settings from AppSettings to the application.
         /// Updates all resource dictionaries with new font and color values.
         /// </summary>
@@ -52,6 +66,22 @@ namespace RestartIt
                 resources["BorderColor"] = CreateBrush(settings.BorderColor);
                 resources["SurfaceColor"] = CreateBrush(settings.SurfaceColor);
                 resources["SecondaryTextColor"] = CreateBrush(settings.SecondaryTextColor);
+                
+                // Button text color: use explicit value or calculate from highlight brightness
+                string buttonTextColor = settings.ButtonTextColor;
+                if (string.IsNullOrWhiteSpace(buttonTextColor))
+                {
+                    buttonTextColor = CalculateButtonTextColor(settings.HighlightColor);
+                }
+                resources["ButtonTextColor"] = CreateBrush(buttonTextColor);
+                
+                // Header color: use explicit value or fall back to SurfaceColor
+                string headerColor = settings.HeaderColor;
+                if (string.IsNullOrWhiteSpace(headerColor))
+                {
+                    headerColor = settings.SurfaceColor;
+                }
+                resources["HeaderColor"] = CreateBrush(headerColor);
 
                 // Update derived colors (for compatibility with existing styles)
                 resources["PrimaryBlue"] = CreateBrush(settings.HighlightColor);
@@ -145,6 +175,38 @@ namespace RestartIt
             catch
             {
                 return new SolidColorBrush(Colors.LightGray);
+            }
+        }
+
+        /// <summary>
+        /// Calculates appropriate button text color based on highlight color brightness.
+        /// Returns white (#FFFFFF) for dark backgrounds, black (#000000) for light backgrounds.
+        /// </summary>
+        /// <param name="highlightColor">The highlight color as a hex string</param>
+        /// <returns>White or black hex color string</returns>
+        private string CalculateButtonTextColor(string highlightColor)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(highlightColor))
+                    return "#FFFFFF"; // Default to white
+                
+                // Ensure hex color starts with #
+                if (!highlightColor.StartsWith("#"))
+                    highlightColor = "#" + highlightColor;
+                
+                var color = (Color)ColorConverter.ConvertFromString(highlightColor);
+                
+                // Calculate brightness using standard formula: (R * 0.299 + G * 0.587 + B * 0.114) / 255
+                double brightness = (color.R * 0.299 + color.G * 0.587 + color.B * 0.114) / 255.0;
+                
+                // If brightness > 0.5, use dark text, otherwise use white text
+                return brightness > 0.5 ? "#000000" : "#FFFFFF";
+            }
+            catch
+            {
+                // Fallback to white if calculation fails
+                return "#FFFFFF";
             }
         }
 

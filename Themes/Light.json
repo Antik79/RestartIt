@@ -1,0 +1,20 @@
+{
+  "name": "Light",
+  "displayName": "Light",
+  "description": "Modern light theme with clean whites and grays",
+  "author": "RestartIt",
+  "version": "1.0",
+  "colors": {
+    "BackgroundColor": "#F5F5F5",
+    "TextColor": "#212121",
+    "HighlightColor": "#0078D4",
+    "BorderColor": "#E0E0E0",
+    "SurfaceColor": "#FFFFFF",
+    "SecondaryTextColor": "#757575",
+    "ButtonTextColor": "#FFFFFF",
+    "HeaderColor": "#FFFFFF"
+  },
+  "fontFamily": "Segoe UI",
+  "fontSize": 12.0
+}
+

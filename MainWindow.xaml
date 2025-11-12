@@ -37,7 +37,7 @@
         <!-- Modern Primary Button with Gradient and Shadow -->
         <Style x:Key="ModernPrimaryButton" TargetType="Button">
             <Setter Property="Background" Value="{DynamicResource HighlightColor}"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{DynamicResource ButtonTextColor}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="18,10"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -136,9 +136,11 @@
 
         <!-- Modern Toolbar with Card -->
         <Border Grid.Row="0" 
-                Style="{StaticResource CardStyle}"
+                Background="{DynamicResource HeaderColor}"
+                CornerRadius="10"
                 Padding="20,14"
-                Margin="0,0,0,12">
+                Margin="0,0,0,12"
+                Effect="{StaticResource CardShadow}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -177,16 +179,40 @@
                         Content="Settings"/>
 
                 <!-- Status Badge -->
-                <Border Grid.Column="5" 
+                <Button Grid.Column="5" 
+                        x:Name="StatusButton"
                         Background="{DynamicResource HighlightColor}"
-                        CornerRadius="20"
                         Padding="12,6"
-                        VerticalAlignment="Center">
+                        VerticalAlignment="Center"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        Click="StatusButton_Click">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}"
+                                                CornerRadius="20"
+                                                Padding="12,6">
+                                            <ContentPresenter HorizontalAlignment="Center" 
+                                                            VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource PrimaryBlueHover}"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
                     <StackPanel Orientation="Horizontal">
                         <Ellipse x:Name="StatusIndicator" 
                                  Width="10" 
                                  Height="10" 
-                                 Fill="White"
+                                 Fill="{DynamicResource ButtonTextColor}"
                                  Margin="0,0,8,0"
                                  VerticalAlignment="Center"/>
                         <TextBlock x:Name="StatusText" 
@@ -194,9 +220,9 @@
                                    FontSize="13"
                                    FontWeight="SemiBold"
                                    VerticalAlignment="Center"
-                                   Foreground="White"/>
+                                   Foreground="{DynamicResource ButtonTextColor}"/>
                     </StackPanel>
-                </Border>
+                </Button>
             </Grid>
         </Border>
 
@@ -214,10 +240,91 @@
                       BorderThickness="0"
                       RowHeight="52"
                       AlternatingRowBackground="{DynamicResource BackgroundColor}">
+                <DataGrid.Style>
+                    <Style TargetType="DataGrid">
+                        <Setter Property="Background" Value="{DynamicResource SurfaceColor}"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="{DynamicResource SurfaceColor}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.Style>
+                <DataGrid.CellStyle>
+                    <Style TargetType="DataGridCell">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderBrush" Value="Transparent"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Foreground" Value="{DynamicResource TextColor}"/>
+                        <Style.Triggers>
+                            <!-- Override inactive selection state - keep background consistent -->
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsSelected" Value="True"/>
+                                    <Condition Property="Selector.IsSelectionActive" Value="False"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Background" Value="{DynamicResource HighlightColor}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ButtonTextColor}"/>
+                            </MultiTrigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource HighlightColor}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ButtonTextColor}"/>
+                            </Trigger>
+                            <!-- Ensure non-selected cells maintain transparent background -->
+                            <Trigger Property="IsSelected" Value="False">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextColor}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.CellStyle>
                 <DataGrid.RowStyle>
                     <Style TargetType="DataGridRow">
                         <Setter Property="Background" Value="{DynamicResource SurfaceColor}"/>
                         <Setter Property="Foreground" Value="{DynamicResource TextColor}"/>
+                        <Style.Triggers>
+                            <!-- Override inactive state styling - ensure background stays consistent -->
+                            <Trigger Property="IsSelected" Value="False">
+                                <Setter Property="Background" Value="{DynamicResource SurfaceColor}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource HighlightColor}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ButtonTextColor}"/>
+                            </Trigger>
+                            <!-- Handle alternating rows -->
+                            <Trigger Property="AlternationIndex" Value="0">
+                                <Setter Property="Background" Value="{DynamicResource SurfaceColor}"/>
+                            </Trigger>
+                            <Trigger Property="AlternationIndex" Value="1">
+                                <Setter Property="Background" Value="{DynamicResource BackgroundColor}"/>
+                            </Trigger>
+                            <!-- Override inactive selection state for rows -->
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsSelected" Value="True"/>
+                                    <Condition Property="Selector.IsSelectionActive" Value="False"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Background" Value="{DynamicResource HighlightColor}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ButtonTextColor}"/>
+                            </MultiTrigger>
+                            <!-- Override mouse over for alternating rows -->
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                    <Condition Property="AlternationIndex" Value="0"/>
+                                    <Condition Property="IsSelected" Value="False"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Background" Value="{DynamicResource SurfaceColor}"/>
+                            </MultiTrigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                    <Condition Property="AlternationIndex" Value="1"/>
+                                    <Condition Property="IsSelected" Value="False"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Background" Value="{DynamicResource BackgroundColor}"/>
+                            </MultiTrigger>
+                        </Style.Triggers>
                     </Style>
                 </DataGrid.RowStyle>
 

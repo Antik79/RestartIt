@@ -21,6 +21,12 @@ namespace RestartIt
         private int _checkIntervalSeconds;
         private int _restartDelaySeconds;
         private bool _enabled;
+        private bool _enableTaskbarNotifications = true;
+        private bool _enableFileLogging = true;
+        private string _logFilePath;
+        private LogLevel _minimumLogLevel = LogLevel.Info;
+        private int _maxLogFileSizeMB = 10;
+        private int _keepLogFilesForDays = 30;
         private string _status;
         private DateTime? _lastRestartTime;
 
@@ -86,6 +92,62 @@ namespace RestartIt
         {
             get => _enabled;
             set { _enabled = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether taskbar notifications are enabled for this program.
+        /// </summary>
+        public bool EnableTaskbarNotifications
+        {
+            get => _enableTaskbarNotifications;
+            set { _enableTaskbarNotifications = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether file logging is enabled for this program.
+        /// If false, uses global logging settings.
+        /// </summary>
+        public bool EnableFileLogging
+        {
+            get => _enableFileLogging;
+            set { _enableFileLogging = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Gets or sets the log file directory path for this program.
+        /// If empty or null, uses the global log directory.
+        /// </summary>
+        public string LogFilePath
+        {
+            get => _logFilePath;
+            set { _logFilePath = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Gets or sets the minimum log level for this program's logging.
+        /// </summary>
+        public LogLevel MinimumLogLevel
+        {
+            get => _minimumLogLevel;
+            set { _minimumLogLevel = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum log file size in MB for this program.
+        /// </summary>
+        public int MaxLogFileSizeMB
+        {
+            get => _maxLogFileSizeMB;
+            set { _maxLogFileSizeMB = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Gets or sets the number of days to keep log files for this program.
+        /// </summary>
+        public int KeepLogFilesForDays
+        {
+            get => _keepLogFilesForDays;
+            set { _keepLogFilesForDays = value; OnPropertyChanged(); }
         }
 
         /// <summary>
@@ -162,6 +224,16 @@ namespace RestartIt
         public bool NotifyOnRestart { get; set; } = true;
         /// <summary>Gets or sets whether to send email notifications on restart failure.</summary>
         public bool NotifyOnFailure { get; set; } = true;
+        /// <summary>Gets or sets whether to send email notifications when a program stops/crashes.</summary>
+        public bool NotifyOnStop { get; set; } = true;
+        /// <summary>Gets or sets whether taskbar notifications are enabled.</summary>
+        public bool EnableTaskbarNotifications { get; set; } = true;
+        /// <summary>Gets or sets whether to show taskbar notifications on successful restart.</summary>
+        public bool NotifyOnRestartTaskbar { get; set; } = true;
+        /// <summary>Gets or sets whether to show taskbar notifications on restart failure.</summary>
+        public bool NotifyOnFailureTaskbar { get; set; } = true;
+        /// <summary>Gets or sets whether to show taskbar notifications when a program stops/crashes.</summary>
+        public bool NotifyOnStopTaskbar { get; set; } = true;
     }
 
     /// <summary>
@@ -175,6 +247,8 @@ namespace RestartIt
         public bool MinimizeToTray { get; set; } = true;
         /// <summary>Gets or sets whether to start the application minimized to tray.</summary>
         public bool StartMinimized { get; set; } = false;
+        /// <summary>Gets or sets whether to minimize to system tray when closing the window instead of exiting.</summary>
+        public bool MinimizeOnClose { get; set; } = false;
         /// <summary>Gets or sets the language code (e.g., "en", "de", "fr").</summary>
         public string Language { get; set; } = "en";
 
@@ -195,6 +269,10 @@ namespace RestartIt
         public string SurfaceColor { get; set; } = "#FFFFFF";
         /// <summary>Gets or sets the secondary text color as a hex string (e.g., "#757575").</summary>
         public string SecondaryTextColor { get; set; } = "#757575";
+        /// <summary>Gets or sets the button text color as a hex string (e.g., "#FFFFFF" or "#000000"). If not set, will be calculated automatically based on highlight brightness.</summary>
+        public string ButtonTextColor { get; set; }
+        /// <summary>Gets or sets the header/toolbar background color as a hex string (e.g., "#FFFFFF"). If not set, defaults to SurfaceColor.</summary>
+        public string HeaderColor { get; set; }
         /// <summary>Gets or sets the theme preset name (e.g., "Custom", "Latte", "Frappe", "Macchiato", "Mocha").</summary>
         public string ThemePreset { get; set; } = "Custom";
     }
@@ -240,6 +318,120 @@ namespace RestartIt
         public LogLevel Level { get; set; }
         /// <summary>Gets or sets the timestamp when the log message was created.</summary>
         public DateTime Timestamp { get; set; }
+    }
+
+    /// <summary>
+    /// Represents a theme definition loaded from a JSON file.
+    /// Contains all color and font settings for a theme.
+    /// </summary>
+    public class ThemeDefinition
+    {
+        /// <summary>Gets or sets the internal theme name (used for file matching).</summary>
+        public string Name { get; set; }
+        
+        /// <summary>Gets or sets the display name shown to users.</summary>
+        public string DisplayName { get; set; }
+        
+        /// <summary>Gets or sets the theme description.</summary>
+        public string Description { get; set; }
+        
+        /// <summary>Gets or sets the theme author.</summary>
+        public string Author { get; set; }
+        
+        /// <summary>Gets or sets the theme version.</summary>
+        public string Version { get; set; }
+        
+        /// <summary>Gets or sets the theme color palette.</summary>
+        public ThemeColors Colors { get; set; }
+        
+        /// <summary>Gets or sets the default font family for this theme.</summary>
+        public string FontFamily { get; set; }
+        
+        /// <summary>Gets or sets the default font size for this theme.</summary>
+        public double FontSize { get; set; }
+        
+        /// <summary>
+        /// Validates the theme definition.
+        /// </summary>
+        /// <returns>True if valid, false otherwise</returns>
+        public bool IsValid()
+        {
+            if (string.IsNullOrWhiteSpace(Name) || string.IsNullOrWhiteSpace(DisplayName))
+                return false;
+            
+            if (Colors == null)
+                return false;
+            
+            // Validate all required colors are present
+            return !string.IsNullOrWhiteSpace(Colors.BackgroundColor) &&
+                   !string.IsNullOrWhiteSpace(Colors.TextColor) &&
+                   !string.IsNullOrWhiteSpace(Colors.HighlightColor) &&
+                   !string.IsNullOrWhiteSpace(Colors.BorderColor) &&
+                   !string.IsNullOrWhiteSpace(Colors.SurfaceColor) &&
+                   !string.IsNullOrWhiteSpace(Colors.SecondaryTextColor);
+        }
+        
+        /// <summary>
+        /// Applies this theme to AppSettings.
+        /// </summary>
+        public void ApplyToAppSettings(AppSettings settings)
+        {
+            if (settings == null || Colors == null)
+                return;
+            
+            settings.BackgroundColor = Colors.BackgroundColor;
+            settings.TextColor = Colors.TextColor;
+            settings.HighlightColor = Colors.HighlightColor;
+            settings.BorderColor = Colors.BorderColor;
+            settings.SurfaceColor = Colors.SurfaceColor;
+            settings.SecondaryTextColor = Colors.SecondaryTextColor;
+            settings.ButtonTextColor = Colors.ButtonTextColor;
+            settings.HeaderColor = Colors.HeaderColor;
+            
+            if (!string.IsNullOrWhiteSpace(FontFamily))
+                settings.FontFamily = FontFamily;
+            
+            if (FontSize > 0)
+                settings.FontSize = FontSize;
+        }
+    }
+    
+    /// <summary>
+    /// Represents the color palette for a theme.
+    /// </summary>
+    public class ThemeColors
+    {
+        /// <summary>Gets or sets the background color as a hex string.</summary>
+        [System.Text.Json.Serialization.JsonPropertyName("BackgroundColor")]
+        public string BackgroundColor { get; set; }
+        
+        /// <summary>Gets or sets the text color as a hex string.</summary>
+        [System.Text.Json.Serialization.JsonPropertyName("TextColor")]
+        public string TextColor { get; set; }
+        
+        /// <summary>Gets or sets the highlight/accent color as a hex string.</summary>
+        [System.Text.Json.Serialization.JsonPropertyName("HighlightColor")]
+        public string HighlightColor { get; set; }
+        
+        /// <summary>Gets or sets the border color as a hex string.</summary>
+        [System.Text.Json.Serialization.JsonPropertyName("BorderColor")]
+        public string BorderColor { get; set; }
+        
+        /// <summary>Gets or sets the surface/card background color as a hex string.</summary>
+        [System.Text.Json.Serialization.JsonPropertyName("SurfaceColor")]
+        public string SurfaceColor { get; set; }
+        
+        /// <summary>Gets or sets the secondary text color as a hex string.</summary>
+        [System.Text.Json.Serialization.JsonPropertyName("SecondaryTextColor")]
+        public string SecondaryTextColor { get; set; }
+        
+        /// <summary>Gets or sets the button text color as a hex string.</summary>
+        [System.Text.Json.Serialization.JsonPropertyName("ButtonTextColor")]
+        public string ButtonTextColor { get; set; }
+        
+        /// <summary>Gets or sets the header/toolbar background color as a hex string.</summary>
+        [System.Text.Json.Serialization.JsonPropertyName("HeaderColor")]
+        public string HeaderColor { get; set; }
     }
 
     /// <summary>
@@ -291,6 +483,9 @@ namespace RestartIt
                         NotificationSettings = config.NotificationSettings ?? new NotificationSettings();
                         AppSettings = config.AppSettings ?? new AppSettings();
 
+                        // Migrate old Catppuccin theme names to new theme system
+                        MigrateThemePreset();
+
                         // Keep password encrypted in memory - only decrypt to SecureString when actually using it
                         // If password is plain text (legacy), it will be encrypted on next save
                         // EmailNotificationService will handle both encrypted and plain text passwords
@@ -313,6 +508,36 @@ namespace RestartIt
         }
 
         /// <summary>
+        /// Migrates old Catppuccin theme preset names to new theme system.
+        /// Latte/Frappe → Light, Macchiato/Mocha → Dark
+        /// </summary>
+        private void MigrateThemePreset()
+        {
+            if (AppSettings == null || string.IsNullOrWhiteSpace(AppSettings.ThemePreset))
+                return;
+
+            var oldPreset = AppSettings.ThemePreset;
+            string newPreset = null;
+
+            // Map old Catppuccin themes to new themes
+            if (oldPreset == "Latte" || oldPreset == "Frappe")
+            {
+                newPreset = "Light";
+            }
+            else if (oldPreset == "Macchiato" || oldPreset == "Mocha")
+            {
+                newPreset = "Dark";
+            }
+
+            // If migration is needed, update the preset
+            if (newPreset != null && newPreset != oldPreset)
+            {
+                AppSettings.ThemePreset = newPreset;
+                System.Diagnostics.Debug.WriteLine($"Migrated theme preset from '{oldPreset}' to '{newPreset}'");
+            }
+        }
+
+        /// <summary>
         /// Saves the application configuration to the JSON file.
         /// Encrypts the password if it's not already encrypted (handles legacy plain text passwords).
         /// </summary>
@@ -332,7 +557,12 @@ namespace RestartIt
                     SenderName = config.NotificationSettings.SenderName,
                     RecipientEmail = config.NotificationSettings.RecipientEmail,
                     NotifyOnRestart = config.NotificationSettings.NotifyOnRestart,
-                    NotifyOnFailure = config.NotificationSettings.NotifyOnFailure
+                    NotifyOnFailure = config.NotificationSettings.NotifyOnFailure,
+                    NotifyOnStop = config.NotificationSettings.NotifyOnStop,
+                    EnableTaskbarNotifications = config.NotificationSettings.EnableTaskbarNotifications,
+                    NotifyOnRestartTaskbar = config.NotificationSettings.NotifyOnRestartTaskbar,
+                    NotifyOnFailureTaskbar = config.NotificationSettings.NotifyOnFailureTaskbar,
+                    NotifyOnStopTaskbar = config.NotificationSettings.NotifyOnStopTaskbar
                 };
 
                 // Encrypt the password before saving

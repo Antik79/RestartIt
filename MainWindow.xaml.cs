@@ -57,22 +57,44 @@ namespace RestartIt
             _programs = new ObservableCollection<MonitoredProgram>();
             _configManager = new ConfigurationManager();
             _logger = new LoggerService(_configManager.LogSettings);
-            _monitorService = new ProcessMonitorService(_programs, _logger, _configManager.NotificationSettings);
+            
+            // Initialize system tray first to get _notifyIcon reference
+            InitializeSystemTray();
+            
+            _monitorService = new ProcessMonitorService(_programs, _logger, _configManager.NotificationSettings, _notifyIcon, _configManager.LogSettings);
 
             // Initialize localization
             LoadConfiguration();
             LocalizationService.Instance.LoadLanguage(_configManager.AppSettings.Language);
             LocalizationService.Instance.LanguageChanged += OnLanguageChanged;
 
-            // Apply theme
-            ThemeService.Instance.ApplyTheme(_configManager.AppSettings);
+            // Apply theme (migration handled in ConfigurationManager.LoadConfiguration)
+            // If theme preset is set and not "Custom", try to load from ThemeManager
+            if (!string.IsNullOrWhiteSpace(_configManager.AppSettings.ThemePreset) && 
+                _configManager.AppSettings.ThemePreset != "Custom")
+            {
+                var theme = ThemeManager.Instance.GetTheme(_configManager.AppSettings.ThemePreset);
+                if (theme != null)
+                {
+                    ThemeService.Instance.ApplyTheme(theme);
+                }
+                else
+                {
+                    // Fallback to AppSettings if theme not found
+                    ThemeService.Instance.ApplyTheme(_configManager.AppSettings);
+                }
+            }
+            else
+            {
+                // Custom theme - apply from AppSettings
+                ThemeService.Instance.ApplyTheme(_configManager.AppSettings);
+            }
 
             ProgramsDataGrid.ItemsSource = _programs;
 
             _logger.LogMessageReceived += Logger_LogMessageReceived;
             _monitorService.StatusChanged += MonitorService_StatusChanged;
 
-            InitializeSystemTray();
             UpdateUIText();
             _monitorService.Start();
 
@@ -122,8 +144,27 @@ namespace RestartIt
             };
 
             // Create context menu
-            var contextMenu = new Forms.ContextMenuStrip();
+            UpdateTrayContextMenu();
 
+            // Subscribe to collection changes to update menu dynamically
+            _programs.CollectionChanged += (s, e) => UpdateTrayContextMenu();
+        }
+
+        /// <summary>
+        /// Updates the tray icon context menu with current programs.
+        /// Creates Monitors and Notifications folders dynamically.
+        /// </summary>
+        private void UpdateTrayContextMenu()
+        {
+            // Check if NotifyIcon is initialized
+            if (_notifyIcon == null)
+                return;
+
+            try
+            {
+                var contextMenu = new Forms.ContextMenuStrip();
+
+            // 1. Show Window
             var showItem = new Forms.ToolStripMenuItem(LocalizationService.Instance.GetString("Tray.ShowWindow", "Show Window"));
             showItem.Click += (s, e) =>
             {
@@ -135,7 +176,119 @@ namespace RestartIt
 
             contextMenu.Items.Add(new Forms.ToolStripSeparator());
 
-            var exitItem = new Forms.ToolStripMenuItem("Exit");
+            // 2. Start/Stop Monitoring
+            bool isMonitoringActive = _monitorService != null && _monitorService.IsRunning;
+            var monitoringIndicator = isMonitoringActive ? "✓ " : "✗ ";
+            var monitoringColor = isMonitoringActive ? 
+                System.Drawing.Color.FromArgb(40, 167, 69) : // Green
+                System.Drawing.Color.FromArgb(220, 53, 69);   // Red
+            var monitoringText = isMonitoringActive ?
+                LocalizationService.Instance.GetString("Tray.StopMonitoring", "Stop Monitoring") :
+                LocalizationService.Instance.GetString("Tray.StartMonitoring", "Start Monitoring");
+            
+            var monitoringItem = new Forms.ToolStripMenuItem($"{monitoringIndicator}{monitoringText}");
+            monitoringItem.ForeColor = monitoringColor;
+            monitoringItem.Click += (s, e) =>
+            {
+                if (_monitorService != null)
+                {
+                    if (_monitorService.IsRunning)
+                    {
+                        _monitorService.Stop();
+                    }
+                    else
+                    {
+                        _monitorService.Start();
+                    }
+                    UpdateTrayContextMenu();
+                }
+            };
+            contextMenu.Items.Add(monitoringItem);
+
+            contextMenu.Items.Add(new Forms.ToolStripSeparator());
+
+            // 3. Monitor (submenu) - only show if there are programs
+            if (_programs.Count > 0)
+            {
+                var monitorFolder = new Forms.ToolStripMenuItem(LocalizationService.Instance.GetString("Tray.Monitor", "Monitor"));
+                bool monitoringEnabled = _monitorService != null && _monitorService.IsRunning;
+                foreach (var program in _programs)
+                {
+                    // Use checkmark + space when enabled, or three spaces when disabled to match width
+                    var indicator = program.Enabled ? "✓ " : "   "; 
+                    var menuItem = new Forms.ToolStripMenuItem($"{indicator}{program.ProgramName}");
+                    var capturedProgram = program; // Capture for closure
+                    menuItem.Enabled = monitoringEnabled; // Disable if monitoring is stopped
+                    menuItem.Click += (s, e) =>
+                    {
+                        if (monitoringEnabled) // Only allow toggle if monitoring is active
+                        {
+                            capturedProgram.Enabled = !capturedProgram.Enabled;
+                            SaveConfiguration();
+                            UpdateTrayContextMenu(); // Refresh menu to show updated state
+                        }
+                    };
+                    monitorFolder.DropDownItems.Add(menuItem);
+                }
+                contextMenu.Items.Add(monitorFolder);
+            }
+
+            // 4. Notifications (submenu) - only show if there are programs
+            if (_programs.Count > 0)
+            {
+                var notificationsFolder = new Forms.ToolStripMenuItem(LocalizationService.Instance.GetString("Tray.Notifications", "Notifications"));
+                foreach (var program in _programs)
+                {
+                    // Use checkmark + space when enabled, or three spaces when disabled to match width
+                    var indicator = program.EnableTaskbarNotifications ? "✓ " : "   "; 
+                    var menuItem = new Forms.ToolStripMenuItem($"{indicator}{program.ProgramName}");
+                    var capturedProgram = program; // Capture for closure
+                    menuItem.Click += (s, e) =>
+                    {
+                        capturedProgram.EnableTaskbarNotifications = !capturedProgram.EnableTaskbarNotifications;
+                        SaveConfiguration();
+                        UpdateTrayContextMenu();
+                    };
+                    notificationsFolder.DropDownItems.Add(menuItem);
+                }
+                contextMenu.Items.Add(notificationsFolder);
+            }
+
+            contextMenu.Items.Add(new Forms.ToolStripSeparator());
+
+            // 5. Options (submenu) - group minimize settings
+            var optionsFolder = new Forms.ToolStripMenuItem(LocalizationService.Instance.GetString("Tray.Options", "Options"));
+            
+            // Minimize to System Tray
+            var minimizeToTrayIndicator = _configManager.AppSettings.MinimizeToTray ? "✓ " : "   ";
+            var minimizeToTrayItem = new Forms.ToolStripMenuItem(
+                $"{minimizeToTrayIndicator}{LocalizationService.Instance.GetString("Tray.MinimizeToTray", "Minimize to System Tray")}");
+            minimizeToTrayItem.Click += (s, e) =>
+            {
+                _configManager.AppSettings.MinimizeToTray = !_configManager.AppSettings.MinimizeToTray;
+                SaveConfiguration();
+                UpdateTrayContextMenu();
+            };
+            optionsFolder.DropDownItems.Add(minimizeToTrayItem);
+
+            // Minimize on Close
+            var minimizeOnCloseIndicator = _configManager.AppSettings.MinimizeOnClose ? "✓ " : "   ";
+            var minimizeOnCloseItem = new Forms.ToolStripMenuItem(
+                $"{minimizeOnCloseIndicator}{LocalizationService.Instance.GetString("Tray.MinimizeOnClose", "Minimize on Close")}");
+            minimizeOnCloseItem.Click += (s, e) =>
+            {
+                _configManager.AppSettings.MinimizeOnClose = !_configManager.AppSettings.MinimizeOnClose;
+                SaveConfiguration();
+                UpdateTrayContextMenu();
+            };
+            optionsFolder.DropDownItems.Add(minimizeOnCloseItem);
+            
+            contextMenu.Items.Add(optionsFolder);
+
+            contextMenu.Items.Add(new Forms.ToolStripSeparator());
+
+            // 6. Exit
+            var exitItem = new Forms.ToolStripMenuItem(LocalizationService.Instance.GetString("Tray.Exit", "Exit"));
             exitItem.Click += (s, e) =>
             {
                 _isClosing = true;
@@ -143,7 +296,39 @@ namespace RestartIt
             };
             contextMenu.Items.Add(exitItem);
 
-            _notifyIcon.ContextMenuStrip = contextMenu;
+                _notifyIcon.ContextMenuStrip = contextMenu;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error updating tray context menu: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                // Create a minimal menu as fallback
+                try
+                {
+                    var fallbackMenu = new Forms.ContextMenuStrip();
+                    var showItem = new Forms.ToolStripMenuItem("Show Window");
+                    showItem.Click += (s, e) =>
+                    {
+                        Show();
+                        WindowState = WindowState.Normal;
+                        Activate();
+                    };
+                    fallbackMenu.Items.Add(showItem);
+                    fallbackMenu.Items.Add(new Forms.ToolStripSeparator());
+                    var exitItem = new Forms.ToolStripMenuItem("Exit");
+                    exitItem.Click += (s, e) =>
+                    {
+                        _isClosing = true;
+                        Close();
+                    };
+                    fallbackMenu.Items.Add(exitItem);
+                    _notifyIcon.ContextMenuStrip = fallbackMenu;
+                }
+                catch
+                {
+                    // If even fallback fails, at least try to ensure menu exists
+                }
+            }
         }
 
         private void Window_StateChanged(object sender, EventArgs e)
@@ -164,6 +349,14 @@ namespace RestartIt
             var config = _configManager.LoadConfiguration();
             foreach (var program in config.Programs)
             {
+                // Subscribe to property changes to update tray menu
+                program.PropertyChanged += (s, e) =>
+                {
+                    if (e.PropertyName == nameof(MonitoredProgram.Enabled))
+                    {
+                        UpdateTrayContextMenu();
+                    }
+                };
                 _programs.Add(program);
             }
         }
@@ -203,6 +396,14 @@ namespace RestartIt
                 var editDialog = new ProgramEditDialog(dialog.FileName);
                 if (editDialog.ShowDialog() == true)
                 {
+                    // Subscribe to property changes to update tray menu
+                    editDialog.Program.PropertyChanged += (s, e) =>
+                    {
+                        if (e.PropertyName == nameof(MonitoredProgram.Enabled))
+                        {
+                            UpdateTrayContextMenu();
+                        }
+                    };
                     _programs.Add(editDialog.Program);
                     SaveConfiguration();
                     LogMessage(string.Format(LocalizationService.Instance.GetString("Log.ProgramAdded", "Added program: {0}"), editDialog.Program.ProgramName), LogLevel.Info);
@@ -268,6 +469,8 @@ namespace RestartIt
                 _configManager.NotificationSettings,
                 _configManager.AppSettings);
 
+            settingsDialog.Owner = this;
+
             if (settingsDialog.ShowDialog() == true)
             {
                 _configManager.LogSettings = settingsDialog.LogSettings;
@@ -281,7 +484,33 @@ namespace RestartIt
                 StartupManager.SetStartup(settingsDialog.AppSettings.StartWithWindows);
 
                 // Apply theme changes
-                ThemeService.Instance.ApplyTheme(settingsDialog.AppSettings);
+                // If preset is set and not "Custom", use ThemeManager
+                if (!string.IsNullOrWhiteSpace(settingsDialog.AppSettings.ThemePreset) && 
+                    settingsDialog.AppSettings.ThemePreset != "Custom")
+                {
+                    // Try to get theme by internal name first
+                    var theme = ThemeManager.Instance.GetTheme(settingsDialog.AppSettings.ThemePreset);
+                    
+                    // If not found, try to find by display name
+                    if (theme == null)
+                    {
+                        theme = ThemeManager.Instance.GetThemes()
+                            .FirstOrDefault(t => t.DisplayName == settingsDialog.AppSettings.ThemePreset);
+                    }
+                    
+                    if (theme != null)
+                    {
+                        ThemeService.Instance.ApplyTheme(theme);
+                    }
+                    else
+                    {
+                        ThemeService.Instance.ApplyTheme(settingsDialog.AppSettings);
+                    }
+                }
+                else
+                {
+                    ThemeService.Instance.ApplyTheme(settingsDialog.AppSettings);
+                }
 
                 SaveConfiguration();
                 LogMessage(LocalizationService.Instance.GetString("Log.SettingsUpdated", "Settings updated"), LogLevel.Info);
@@ -402,6 +631,19 @@ namespace RestartIt
             });
         }
 
+        private void StatusButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_monitorService.IsRunning)
+            {
+                _monitorService.Stop();
+            }
+            else
+            {
+                _monitorService.Start();
+            }
+            UpdateTrayContextMenu(); // Update tray menu to reflect new state
+        }
+
         private void MonitorService_StatusChanged(object sender, EventArgs e)
         {
             Dispatcher.Invoke(() =>
@@ -481,12 +723,7 @@ namespace RestartIt
             if (_notifyIcon != null)
             {
                 _notifyIcon.Text = LocalizationService.Instance.GetString("App.TrayTitle", "RestartIt - Application Monitor");
-
-                if (_notifyIcon.ContextMenuStrip != null && _notifyIcon.ContextMenuStrip.Items.Count > 0)
-                {
-                    _notifyIcon.ContextMenuStrip.Items[0].Text = LocalizationService.Instance.GetString("Tray.ShowWindow", "Show Window");
-                    _notifyIcon.ContextMenuStrip.Items[2].Text = LocalizationService.Instance.GetString("Tray.Exit", "Exit");
-                }
+                UpdateTrayContextMenu(); // Refresh menu to update localized text
             }
         }
 
@@ -509,10 +746,11 @@ namespace RestartIt
         /// <param name="e">The cancel event arguments</param>
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-            if (!_isClosing && _configManager.AppSettings.MinimizeToTray)
+            if (!_isClosing && _configManager.AppSettings.MinimizeOnClose)
             {
                 e.Cancel = true;
                 WindowState = WindowState.Minimized;
+                Hide();
                 return;
             }
 
