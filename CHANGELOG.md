@@ -7,6 +7,109 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Per-Program Logging** - Individual log files and settings for each monitored program
+  - Enable/disable file logging per program
+  - Custom log file directories per program
+  - Individual log level, file size, and retention settings
+  - Program-specific log files named `{ProgramName}_{YYYY-MM-DD}.log`
+  - All per-program log events also forwarded to global logger for UI display
+- **Theme Management** - Save and delete custom themes from the application
+  - Save current appearance settings as a theme with metadata (name, display name, description, author)
+  - Delete user-created themes (default themes protected)
+  - Theme files automatically created in Themes folder
+  - Themes immediately available in Theme Preset dropdown after saving
+- **Enhanced Color System** - Added two new color roles for better customization
+  - **ButtonTextColor**: Text color for buttons (automatically calculated based on highlight color brightness)
+  - **HeaderColor**: Background color for headers and toolbar areas
+  - Both colors customizable in Appearance settings
+  - Two-column layout for color pickers in Appearance settings
+- **Font Selector Enhancement** - Font family selector now includes all installed system fonts
+  - Sorted alphabetically for easy selection
+  - Fallback logic for missing fonts
+  - All user-installed fonts available for selection
+
+### Changed
+- **Theming System** - Refactored from hardcoded themes to file-based JSON theme system
+  - Themes now stored in separate JSON files in `Themes/` folder
+  - Default themes: Light and Dark (modern, professional color schemes)
+  - Removed hardcoded Catppuccin themes (Latte, Frappe, Macchiato, Mocha)
+  - Users can create custom themes by adding JSON files or saving from UI
+  - Automatic migration from old Catppuccin theme names to new system
+  - Theme files can be edited without recompiling the application
+- **Appearance Settings Layout** - Improved organization and compactness
+  - Font Family and Font Size moved above Theme Preset selector
+  - Color options split into two columns for more compact layout
+  - Removed Preview section (theme changes apply immediately)
+- **Program Edit Dialog** - Enhanced with per-program logging options
+  - New Logging section with per-program settings
+  - Browse button for log file directory
+  - Validation for log file size and retention days
+- **Language Files** - Updated all language files with new keys
+  - Added translations for theme save/delete functionality
+  - Added translations for per-program logging
+  - Added translations for new color roles
+  - Polish language added (17 languages total)
+
+### Fixed
+- **Theme Application** - Fixed issue where color changes didn't apply when pressing Apply or OK
+  - Manual color changes now automatically switch Theme Preset to "Custom"
+  - Theme lookup now tries internal name first, then display name
+  - Custom settings properly applied when no theme preset matches
+- **Save Theme Dialog** - Fixed layout issue where description textbox overlapped buttons
+  - Increased dialog height to 380px
+  - Adjusted grid row definitions for proper spacing
+  - Added minimum height to description textbox
+
+## [1.3.3] - 2025-01-27
+
+### Added
+- **Taskbar Notifications** - Windows taskbar balloon tip notifications as an alternative to email
+  - Global enable/disable toggle for taskbar notifications
+  - Per-program taskbar notification toggles
+  - Separate toggles for restart success, restart failure, and stop/crash events
+  - Configurable in Settings → Notifications tab
+  - Per-program settings available in Program Edit dialog
+- **Enhanced Tray Icon Menu** - Redesigned system tray context menu with improved organization
+  - **Start/Stop Monitoring** - Global toggle to start/stop all monitoring (green ✓ when active, red ✗ when inactive)
+  - **Monitor** subfolder - List of all monitored programs with enable/disable toggles
+  - **Notifications** subfolder - Per-program taskbar notification toggles
+  - **Minimize to System Tray** - Quick toggle in tray menu
+  - **Minimize on Close** - New setting to minimize to tray when closing window instead of exiting
+  - Visual indicators: Only show ✓ when enabled, space for alignment when disabled
+- **Monitoring Active Button** - Clickable status button in main window toolbar
+  - Click to toggle monitoring service on/off globally
+  - Visual feedback: Green circle when active, red circle when inactive
+  - Updates status text dynamically ("Monitoring Active" / "Monitoring Stopped")
+- **Minimize on Close Setting** - New independent setting for window close behavior
+  - Separate from "Minimize to System Tray" setting
+  - When enabled, closing the window minimizes to tray instead of exiting
+  - Configurable in Settings → Application tab and tray icon menu
+
+### Changed
+- **Tray Icon Menu Structure** - Complete redesign with new organization
+  - Removed global notification toggles from Notifications subfolder
+  - Changed "Monitors" to "Monitor" (singular)
+  - Removed ✗ indicators - only show ✓ when enabled for cleaner appearance
+  - Added space padding when disabled to maintain text alignment
+- **Settings Dialog** - Renamed "Email Notifications" tab to "Notifications"
+  - Now includes both email and taskbar notification settings
+  - Taskbar notification section with global toggles
+  - "Send Test Email" button moved under email notification toggles
+- **Notification System** - Enhanced notification capabilities
+  - Added "Notify on Stop/Crash" option for both email and taskbar notifications
+  - Triggers when a monitored program is detected as stopped (before restart attempt)
+  - Separate from restart success/failure notifications
+
+### Fixed
+- **Language Changes in Settings** - Language changes now apply immediately when pressing OK button
+  - Previously only worked with Apply button
+  - Now both OK and Apply buttons apply language and theme changes correctly
+- **Taskbar Notifications** - Fixed taskbar notification display issues
+  - Improved threading handling for Windows Forms NotifyIcon
+  - Better error handling and debug logging
+  - Default value for EnableTaskbarNotifications set to true for new programs
+
 ## [1.3.2] - 2025-01-27
 
 ### Added
@@ -176,7 +279,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add/Edit/Remove monitored programs
 - Configuration persistence in %AppData%\RestartIt\config.json
 
-[Unreleased]: https://github.com/Antik79/RestartIt/compare/v1.3.2...HEAD
+[Unreleased]: https://github.com/Antik79/RestartIt/compare/v1.3.3...HEAD
+[1.3.3]: https://github.com/Antik79/RestartIt/compare/v1.3.2...v1.3.3
 [1.3.2]: https://github.com/Antik79/RestartIt/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/Antik79/RestartIt/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/Antik79/RestartIt/compare/v1.2.1...v1.3.0

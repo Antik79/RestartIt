@@ -1,6 +1,6 @@
 # RestartIt
 
-**Version 1.3.2** | [Download Latest Release](https://github.com/Antik79/RestartIt/releases/latest)
+**Version 1.4.0** | [Download Latest Release](https://github.com/Antik79/RestartIt/releases/latest)
 
 **RestartIt** is a Windows desktop application that monitors specified programs and automatically restarts them if they stop running. Perfect for maintaining critical applications, services, or any software that needs to stay running 24/7.
 
@@ -14,25 +14,46 @@
 
 ### Notification System
 - **Email Alerts** - SMTP-based email notifications when programs restart or fail
+- **Taskbar Notifications** - Windows taskbar balloon tip notifications as an alternative to email
+- **Per-Program Settings** - Enable/disable taskbar notifications for individual programs
 - **Customizable Sender** - Configure sender name and email for professional notifications
-- **Flexible Rules** - Choose to be notified on successful restart, failure, or both
+- **Flexible Rules** - Choose to be notified on successful restart, failure, stop/crash, or any combination
+- **Dual Notification Support** - Use email, taskbar notifications, or both simultaneously
 
 ### Logging & Monitoring
 - **Comprehensive Logging** - Records all monitoring activities with timestamps
 - **File-Based Logs** - Persistent log files with automatic rotation
+- **Per-Program Logging** - Individual log files and settings for each monitored program
+  - Enable/disable file logging per program
+  - Custom log file directories per program
+  - Individual log level, file size, and retention settings
+  - Program-specific log files named `{ProgramName}_{YYYY-MM-DD}.log`
+- **Global Logging** - System-wide logging settings for application events
 - **Log Management** - Configurable retention period and maximum file size
 - **Activity Display** - Real-time activity log in the UI with bounded buffer (prevents memory leaks)
 
 ### User Interface
 - **Modern Enhanced UI** - Complete redesign with card-based layout, gradient buttons, and subtle shadows
-- **Customizable Theming** - Full theme support with Catppuccin presets (Latte, Frappe, Macchiato, Mocha)
-- **Appearance Settings** - Customize fonts, colors, and theme presets with live preview
+- **File-Based Theming** - Modern theming system using JSON theme files
+  - Default Light and Dark themes included
+  - Create custom themes by adding JSON files to the Themes folder
+  - Save and delete custom themes from the Appearance settings
+  - Themes can be edited without recompiling
+  - Full customization of colors, fonts, and appearance
+  - 8 customizable color roles: Background, Text, Highlight, Border, Surface, Secondary Text, Button Text, Header
+- **Appearance Settings** - Customize fonts, colors, and theme presets
+  - Save custom themes with metadata (name, display name, description, author)
+  - Delete user-created themes (default themes protected)
+  - Two-column color picker layout for compact design
+  - Font family selector with all installed system fonts
 - **Clean Professional Design** - Built with WPF and custom styling (zero dependencies)
-- **Multi-Language Support** - Available in 16 languages with real-time switching
+- **Multi-Language Support** - Available in 17 languages with real-time switching
 - **Modular Language System** - Add new languages by simply dropping JSON files
-- **System Tray Integration** - Runs quietly in the background
+- **System Tray Integration** - Runs quietly in the background with enhanced context menu
+- **Enhanced Tray Menu** - Quick access to monitoring controls, program toggles, and settings
+- **Monitoring Active Button** - Clickable status button in main window to toggle monitoring globally
 - **Easy Configuration** - Simple dialogs for adding and editing monitored programs
-- **Per-Program Settings** - Individual check intervals and restart delays
+- **Per-Program Settings** - Individual check intervals, restart delays, and notification preferences
 
 ### Security & Reliability
 - **Password Encryption** - Email credentials encrypted using Windows DPAPI
@@ -101,13 +122,17 @@ The compiled application will be in `bin/Release/net8.0-windows/`
    - **Working Directory** - Starting directory for the program
    - **Check Interval** - How often to check if running (in seconds)
    - **Restart Delay** - Wait time before restarting (in seconds)
+   - **Enable Taskbar Notifications** - Enable/disable taskbar notifications for this program
 4. Click **OK** to add
 
-### Configuring Email Notifications
+### Configuring Notifications
 
-1. Click **Settings** → **Email Notifications** tab
-2. Enable email notifications
-3. Configure SMTP settings:
+RestartIt supports both email and taskbar notifications. Configure them in **Settings** → **Notifications** tab.
+
+#### Email Notifications
+
+1. Enable email notifications
+2. Configure SMTP settings:
    - **SMTP Server** - e.g., smtp.gmail.com
    - **SMTP Port** - e.g., 587 for TLS
    - **Use SSL/TLS** - Enable for secure connection
@@ -115,10 +140,24 @@ The compiled application will be in `bin/Release/net8.0-windows/`
    - **Sender Name** - Display name (e.g., "Server Monitor")
    - **Sender Password** - Email password (encrypted with DPAPI)
    - **Recipient Email** - Where to send notifications
-4. Use **"Send Test Email"** to verify settings
-5. Choose notification preferences (restart success, failures, or both)
+3. Use **"Send Test Email"** to verify settings
+4. Choose email notification preferences:
+   - **Notify on Successful Restart** - Receive email when program restarts successfully
+   - **Notify on Restart Failure** - Receive email when restart fails
+   - **Notify on Stop/Crash** - Receive email when program is detected as stopped
 
 **Note for Gmail users:** You'll need to use an [App Password](https://support.google.com/accounts/answer/185833) instead of your regular password.
+
+#### Taskbar Notifications
+
+1. Enable taskbar notifications (global toggle)
+2. Configure taskbar notification preferences:
+   - **Notify on Successful Restart** - Show balloon tip when program restarts successfully
+   - **Notify on Restart Failure** - Show balloon tip when restart fails
+   - **Notify on Stop/Crash** - Show balloon tip when program is detected as stopped
+3. Per-program settings:
+   - Enable/disable taskbar notifications for individual programs in the **Program Edit** dialog
+   - Or use the **Tray Icon** → **Notifications** subfolder for quick toggles
 
 ### Email Notification Examples
 
@@ -171,18 +210,39 @@ Sent by RestartIt Application Monitor
 **Notification Preferences:**
 - You can choose to receive notifications on successful restarts only
 - Or on failures only
-- Or both (default)
-- Configure this in Settings → Email Notifications tab
+- Or on stop/crash events only
+- Or any combination of the above
+- Configure this in Settings → Notifications tab
+- Taskbar notifications can be enabled/disabled per program
 
 ### Configuring Logging
 
+#### Global Logging Settings
+
 1. Click **Settings** → **Logging** tab
-2. Configure:
-   - **Log File Path** - Where to store log files
+2. Configure global logging:
+   - **Log File Path** - Where to store global log files
    - **Minimum Log Level** - Debug, Info, Warning, or Error
-   - **Enable File Logging** - Toggle file logging on/off
+   - **Enable File Logging** - Toggle global file logging on/off
    - **Max Log File Size** - Maximum size before rotation (MB)
    - **Keep Log Files For** - How many days to retain logs
+
+#### Per-Program Logging Settings
+
+1. Edit a program (click **⚙ Edit** button)
+2. Scroll to the **Logging** section
+3. Configure per-program logging:
+   - **Enable File Logging** - Enable individual log file for this program
+   - **Log File Directory** - Custom directory for this program's logs (optional)
+   - **Minimum Log Level** - Log level threshold for this program
+   - **Max Log File Size** - Maximum size before rotation (MB)
+   - **Keep Log Files For** - Retention period in days
+
+**Per-Program Log Files:**
+- Named: `{ProgramName}_{YYYY-MM-DD}.log`
+- Stored in the specified directory (or global log directory if not specified)
+- Independent rotation and retention from global logs
+- All per-program log events also appear in the UI activity log
 
 ### Exporting Logs
 
@@ -240,13 +300,43 @@ RestartIt creates log files with the following structure:
 1. Click **Settings** → **Application** tab
 2. Configure:
    - **Start with Windows** - Launch at Windows startup
-   - **Minimize to Tray** - Hide to system tray when minimized
+   - **Minimize to System Tray** - Hide to system tray when minimized
    - **Start Minimized** - Launch minimized to tray
+   - **Minimize on Close** - Minimize to tray when closing window instead of exiting
    - **Language** - Select from 16 available languages
+
+**Note:** "Minimize to System Tray" and "Minimize on Close" are independent settings:
+- **Minimize to System Tray** - Controls behavior when you minimize the window
+- **Minimize on Close** - Controls behavior when you close the window (X button)
+
+### System Tray Menu
+
+Right-click the RestartIt icon in the system tray to access:
+
+1. **Show Window** - Restore and show the main window
+2. **Start/Stop Monitoring** - Toggle monitoring service globally (green ✓ when active, red ✗ when inactive)
+3. **Monitor** - Subfolder listing all monitored programs
+   - Click any program to enable/disable monitoring for that program
+   - Shows ✓ when enabled, space when disabled (for alignment)
+   - Items are disabled when monitoring service is stopped globally
+4. **Notifications** - Subfolder with per-program taskbar notification toggles
+   - Click any program to enable/disable taskbar notifications for that program
+   - Shows ✓ when enabled, space when disabled (for alignment)
+5. **Minimize to System Tray** - Quick toggle for minimize behavior
+6. **Minimize on Close** - Quick toggle for close behavior
+7. **Exit** - Close the application
+
+### Monitoring Active Button
+
+The status badge in the top-right corner of the main window is now clickable:
+- **Click to toggle** monitoring service on/off globally
+- **Green circle** indicates monitoring is active
+- **Red circle** indicates monitoring is stopped
+- Status text updates automatically ("Monitoring Active" / "Monitoring Stopped")
 
 ## Language Support
 
-RestartIt supports **16 languages** with complete UI localization:
+RestartIt supports **17 languages** with complete UI localization:
 
 | Language | Native Name | Flag |
 |----------|-------------|------|
@@ -297,6 +387,66 @@ RestartIt uses a modular language system - you can add new languages without mod
 3. The language will automatically appear in the Settings dropdown!
 
 See existing language files in the `Localization` folder for the complete list of translation keys.
+
+### Custom Themes
+
+You can create, save, and delete custom themes directly from the application or by adding JSON files to the `Themes` folder.
+
+#### Creating a Theme from Current Settings
+
+1. Go to **Settings** → **Appearance** tab
+2. Customize colors, fonts, and other appearance settings
+3. Click **"Save Theme..."** button
+4. Enter theme metadata:
+   - **Theme Name** - Internal identifier (required)
+   - **Display Name** - Name shown in dropdown (optional)
+   - **Description** - Description of your theme (optional)
+   - **Author** - Your name (optional)
+5. Click **OK** to save
+6. Your theme will appear in the Theme Preset dropdown immediately
+
+#### Creating a Theme File Manually
+
+1. Copy `Themes/Light.json` or `Themes/Dark.json` as a starting point
+2. Rename the file (e.g., `MyTheme.json`)
+3. Edit the JSON file with your desired colors and settings
+4. Restart RestartIt
+5. Select your theme from Settings → Appearance → Theme Preset
+
+**Example Theme File Structure:**
+```json
+{
+  "name": "MyTheme",
+  "displayName": "My Custom Theme",
+  "description": "A description of your theme",
+  "author": "Your Name",
+  "version": "1.0",
+  "colors": {
+    "BackgroundColor": "#F5F5F5",
+    "TextColor": "#212121",
+    "HighlightColor": "#0078D4",
+    "BorderColor": "#E0E0E0",
+    "SurfaceColor": "#FFFFFF",
+    "SecondaryTextColor": "#757575",
+    "ButtonTextColor": "#FFFFFF",
+    "HeaderColor": "#FFFFFF"
+  },
+  "fontFamily": "Segoe UI",
+  "fontSize": 12.0
+}
+```
+
+#### Deleting a Custom Theme
+
+1. Go to **Settings** → **Appearance** tab
+2. Select the theme you want to delete from the Theme Preset dropdown
+3. Click **"Delete Theme..."** button
+4. Confirm deletion in the dialog
+5. The theme file will be removed from the Themes folder
+
+**Note:** Default themes (Light and Dark) cannot be deleted.
+
+For detailed instructions and color format guidelines, see `Themes/README.md`.
 
 ## Configuration
 
@@ -475,6 +625,20 @@ A: Yes, all UI elements, dialogs, buttons, and log messages are fully localized 
 **Q: Can I contribute translations?**  
 A: Yes! Please submit pull requests with new language files or improvements to existing translations.
 
+### Theming Questions
+
+**Q: How do I create a custom theme?**  
+A: Create a JSON file in the `Themes` folder following the format of `Light.json` or `Dark.json`. See `Themes/README.md` for detailed instructions and examples.
+
+**Q: Can I edit themes without restarting the application?**  
+A: Theme files are loaded when the application starts. After editing a theme file, restart RestartIt to see the changes.
+
+**Q: What happens if a theme file is invalid?**  
+A: Invalid theme files are skipped. The application will continue to work with the default themes (Light and Dark).
+
+**Q: Can I share my custom themes?**  
+A: Yes! Theme files are just JSON files, so you can easily share them with others. They can simply copy your theme file to their `Themes` folder.
+
 ## Troubleshooting
 
 ### "Windows protected your PC" Warning
@@ -621,7 +785,6 @@ For a detailed list of changes in each version, see [CHANGELOG.md](CHANGELOG.md)
 ### Recent Updates
 
 **v1.3.2** (2025-01-27)
-- **Catppuccin Themes**: Added support for 4 Catppuccin theme flavors (Latte, Frappe, Macchiato, Mocha)
 - **Appearance Settings**: New tab for customizing fonts, colors, and theme presets with live preview
 - **Apply Button**: Instant preview of theme and language changes without closing Settings dialog
 - **UI Fixes**: Fixed color picker bug, improved DataGrid text visibility, and enhanced Settings dialog theming
