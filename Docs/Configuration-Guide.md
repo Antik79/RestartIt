@@ -471,8 +471,8 @@ Can be `null` if program has never been restarted.
 
 ## Additional Resources
 
-- [Developer Guide - Configuration Management](Developer-Guide#configuration-management)
-- [Troubleshooting Guide](Troubleshooting-Guide#configuration-issues)
+- [Developer Guide - Configuration Management](Developer-Guide.md#configuration-management)
+- [Troubleshooting Guide](Troubleshooting-Guide.md#configuration-issues)
 - [JSON Validator](https://jsonlint.com/)
 
 ---
